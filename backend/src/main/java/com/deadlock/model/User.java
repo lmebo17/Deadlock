@@ -59,12 +59,6 @@ public class User {
     }
 
     public String getTierLabel() {
-        if (eloRating < 1200) return "Newbie";
-        if (eloRating < 1400) return "Pupil";
-        if (eloRating < 1600) return "Specialist";
-        if (eloRating < 1900) return "Expert";
-        if (eloRating < 2100) return "Candidate Master";
-        if (eloRating < 2400) return "Master";
-        return "Grandmaster";
+        return Tier.fromRating(eloRating).getLabel();
     }
 }

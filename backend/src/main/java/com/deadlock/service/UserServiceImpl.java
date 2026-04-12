@@ -1,5 +1,8 @@
 package com.deadlock.service;
 
+import com.deadlock.exception.InvalidInputException;
+import com.deadlock.exception.ResourceNotFoundException;
+import com.deadlock.exception.UsernameAlreadyTakenException;
 import com.deadlock.model.User;
 import com.deadlock.model.UserProvider;
 import com.deadlock.repository.UserProviderRepository;
@@ -48,15 +51,15 @@ public class UserServiceImpl implements UserService {
     @Transactional
     public User setUsername(Long userId, String username) {
         User user = userRepository.findById(userId)
-                .orElseThrow(() -> new IllegalArgumentException("User not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("User", userId.toString()));
 
         if (!USERNAME_PATTERN.matcher(username).matches()) {
-            throw new IllegalArgumentException(
+            throw new InvalidInputException(
                     "Username must be 3-20 characters, alphanumeric and underscores only");
         }
 
         if (userRepository.existsByUsername(username)) {
-            throw new IllegalArgumentException("Username '" + username + "' is already taken");
+            throw new UsernameAlreadyTakenException(username);
         }
 
         user.setUsername(username);
@@ -67,7 +70,7 @@ public class UserServiceImpl implements UserService {
     @Transactional
     public void incrementTokenVersion(Long userId) {
         User user = userRepository.findById(userId)
-                .orElseThrow(() -> new IllegalArgumentException("User not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("User", userId.toString()));
         user.setTokenVersion(user.getTokenVersion() + 1);
         userRepository.save(user);
     }
@@ -75,6 +78,6 @@ public class UserServiceImpl implements UserService {
     @Override
     public User findById(Long userId) {
         return userRepository.findById(userId)
-                .orElseThrow(() -> new IllegalArgumentException("User not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("User", userId.toString()));
     }
 }

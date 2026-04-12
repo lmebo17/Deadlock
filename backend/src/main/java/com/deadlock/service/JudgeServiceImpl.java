@@ -1,11 +1,15 @@
 package com.deadlock.service;
 
+import com.deadlock.event.SubmissionJudgedEvent;
 import com.deadlock.model.Problem;
 import com.deadlock.model.Submission;
+import com.deadlock.model.SubmissionStatus;
+import com.deadlock.model.Verdict;
 import com.deadlock.repository.SubmissionRepository;
 import com.deadlock.sandbox.SandboxResult;
 import com.deadlock.sandbox.SandboxService;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
@@ -22,18 +26,21 @@ public class JudgeServiceImpl implements JudgeService {
     private final SandboxService sandboxService;
     private final StorageService storageService;
     private final SubmissionRepository submissionRepository;
+    private final ApplicationEventPublisher eventPublisher;
 
     public JudgeServiceImpl(SandboxService sandboxService, StorageService storageService,
-                            SubmissionRepository submissionRepository) {
+                            SubmissionRepository submissionRepository,
+                            ApplicationEventPublisher eventPublisher) {
         this.sandboxService = sandboxService;
         this.storageService = storageService;
         this.submissionRepository = submissionRepository;
+        this.eventPublisher = eventPublisher;
     }
 
     @Override
     @Async("judgeExecutor")
     public void judge(Submission submission) {
-        submission.setStatus("JUDGING");
+        submission.setStatus(SubmissionStatus.JUDGING);
         submissionRepository.save(submission);
 
         Problem problem = submission.getProblem();
@@ -54,18 +61,18 @@ public class JudgeServiceImpl implements JudgeService {
 
             // Execute all tests in one container
             SandboxResult result = sandboxService.executeAll(
-                    submission.getCode(), submission.getLanguage(), testInputs,
+                    submission.getCode(), submission.getLanguage().name(), testInputs,
                     problem.getTimeLimitMs(), problem.getMemoryLimitMb());
 
             // Handle compile error
             if (result.isCompileError()) {
-                finishSubmission(submission, "COMPILE_ERROR", 1, result.getTotalExecutionTimeMs());
+                finishSubmission(submission, Verdict.COMPILE_ERROR, 1, result.getTotalExecutionTimeMs());
                 return;
             }
 
             // Handle OOM
             if (result.isOomKilled()) {
-                finishSubmission(submission, "MLE", null, result.getTotalExecutionTimeMs());
+                finishSubmission(submission, Verdict.MLE, null, result.getTotalExecutionTimeMs());
                 return;
             }
 
@@ -74,41 +81,43 @@ public class JudgeServiceImpl implements JudgeService {
                 int idx = tcResult.getTestIndex();
 
                 if (tcResult.isTimedOut()) {
-                    finishSubmission(submission, "TLE", idx, result.getTotalExecutionTimeMs());
+                    finishSubmission(submission, Verdict.TLE, idx, result.getTotalExecutionTimeMs());
                     return;
                 }
                 if (tcResult.getExitCode() != 0) {
-                    finishSubmission(submission, "RUNTIME_ERROR", idx, result.getTotalExecutionTimeMs());
+                    finishSubmission(submission, Verdict.RUNTIME_ERROR, idx, result.getTotalExecutionTimeMs());
                     return;
                 }
                 if (!normalizeOutput(tcResult.getStdout()).equals(
                         normalizeOutput(expectedOutputs.get(idx - 1)))) {
-                    finishSubmission(submission, "WRONG_ANSWER", idx, result.getTotalExecutionTimeMs());
+                    finishSubmission(submission, Verdict.WRONG_ANSWER, idx, result.getTotalExecutionTimeMs());
                     return;
                 }
             }
 
             // If we got fewer results than test cases, something went wrong
             if (result.getTestResults().size() < problem.getTestCaseCount()) {
-                finishSubmission(submission, "RUNTIME_ERROR", result.getTestResults().size() + 1,
+                finishSubmission(submission, Verdict.RUNTIME_ERROR, result.getTestResults().size() + 1,
                         result.getTotalExecutionTimeMs());
                 return;
             }
 
-            finishSubmission(submission, "ACCEPTED", null, result.getTotalExecutionTimeMs());
+            finishSubmission(submission, Verdict.ACCEPTED, null, result.getTotalExecutionTimeMs());
         } catch (Exception e) {
             log.error("Judge failed for submission {}", submission.getId(), e);
-            finishSubmission(submission, "RUNTIME_ERROR", null, 0);
+            finishSubmission(submission, Verdict.RUNTIME_ERROR, null, 0);
         }
     }
 
-    private void finishSubmission(Submission submission, String verdict, Integer failedTestCase, long executionTimeMs) {
+    private void finishSubmission(Submission submission, Verdict verdict, Integer failedTestCase, long executionTimeMs) {
         submission.setVerdict(verdict);
         submission.setFailedTestCase(failedTestCase);
         submission.setExecutionTimeMs((int) executionTimeMs);
-        submission.setStatus("COMPLETED");
+        submission.setStatus(SubmissionStatus.COMPLETED);
         submissionRepository.save(submission);
         log.info("Submission {} verdict: {} ({}ms)", submission.getId(), verdict, executionTimeMs);
+
+        eventPublisher.publishEvent(new SubmissionJudgedEvent(this, submission.getId(), verdict.name()));
     }
 
     private String normalizeOutput(String output) {

@@ -1,6 +1,7 @@
 package com.deadlock.service;
 
 import com.deadlock.dto.*;
+import com.deadlock.exception.ResourceNotFoundException;
 import com.deadlock.model.Problem;
 import com.deadlock.repository.ProblemRepository;
 import org.springframework.data.domain.Page;
@@ -34,7 +35,7 @@ public class ProblemServiceImpl implements ProblemService {
     @Override
     public ProblemDetailResponse getProblemBySlug(String slug) {
         Problem problem = problemRepository.findBySlug(slug)
-                .orElseThrow(() -> new IllegalArgumentException("Problem not found: " + slug));
+                .orElseThrow(() -> new ResourceNotFoundException("Problem", slug));
 
         List<TestCaseResponse> samples = loadSampleTestCases(problem);
         return ProblemDetailResponse.from(problem, samples);
@@ -63,7 +64,7 @@ public class ProblemServiceImpl implements ProblemService {
     public void uploadTestCases(Long problemId, List<byte[]> inputs, List<byte[]> outputs,
                                  int sampleCount) {
         Problem problem = problemRepository.findById(problemId)
-                .orElseThrow(() -> new IllegalArgumentException("Problem not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Problem", problemId.toString()));
 
         String prefix = problem.getId() + "/tests/";
 

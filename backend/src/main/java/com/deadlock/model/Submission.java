@@ -25,17 +25,20 @@ public class Submission {
     @Column(name = "match_id")
     private Long matchId;
 
+    @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 10)
-    private String language;
+    private Language language;
 
     @Column(nullable = false, columnDefinition = "TEXT")
     private String code;
 
+    @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 20)
-    private String status = "PENDING";
+    private SubmissionStatus status = SubmissionStatus.PENDING;
 
+    @Enumerated(EnumType.STRING)
     @Column(length = 20)
-    private String verdict;
+    private Verdict verdict;
 
     @Column(name = "failed_test_case")
     private Integer failedTestCase;

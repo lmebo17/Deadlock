@@ -15,6 +15,8 @@ import org.springframework.stereotype.Component;
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 @Component
 public class OAuthSuccessHandler implements AuthenticationSuccessHandler {
@@ -22,12 +24,16 @@ public class OAuthSuccessHandler implements AuthenticationSuccessHandler {
     private final UserService userService;
     private final JwtService jwtService;
     private final String frontendUrl;
+    private final Map<String, OAuthProviderStrategy> strategies;
 
     public OAuthSuccessHandler(UserService userService, JwtService jwtService,
-                                @Value("${app.frontend-url}") String frontendUrl) {
+                                @Value("${app.frontend-url}") String frontendUrl,
+                                List<OAuthProviderStrategy> strategyList) {
         this.userService = userService;
         this.jwtService = jwtService;
         this.frontendUrl = frontendUrl;
+        this.strategies = strategyList.stream()
+                .collect(Collectors.toMap(OAuthProviderStrategy::getProviderName, Function.identity()));
     }
 
     @Override
@@ -37,10 +43,15 @@ public class OAuthSuccessHandler implements AuthenticationSuccessHandler {
         OAuth2User oauthUser = oauthToken.getPrincipal();
         String provider = oauthToken.getAuthorizedClientRegistrationId();
 
-        String email = extractEmail(oauthUser, provider);
-        String displayName = extractDisplayName(oauthUser, provider);
-        String avatarUrl = extractAvatarUrl(oauthUser, provider);
-        String providerId = extractProviderId(oauthUser, provider);
+        OAuthProviderStrategy strategy = strategies.get(provider);
+        if (strategy == null) {
+            throw new IllegalArgumentException("Unsupported OAuth provider: " + provider);
+        }
+
+        String email = strategy.extractEmail(oauthUser);
+        String displayName = strategy.extractDisplayName(oauthUser);
+        String avatarUrl = strategy.extractAvatarUrl(oauthUser);
+        String providerId = strategy.extractProviderId(oauthUser);
 
         User user = userService.findOrCreateUser(email, displayName, avatarUrl, provider, providerId);
 
@@ -58,48 +69,5 @@ public class OAuthSuccessHandler implements AuthenticationSuccessHandler {
                 : frontendUrl + "/lobby";
 
         response.sendRedirect(redirectUrl);
-    }
-
-    @SuppressWarnings("unchecked")
-    private String extractEmail(OAuth2User oauthUser, String provider) {
-        if ("github".equals(provider)) {
-            String email = oauthUser.getAttribute("email");
-            if (email != null) return email;
-            Object emailsAttr = oauthUser.getAttribute("emails");
-            if (emailsAttr instanceof List<?> emails && !emails.isEmpty()) {
-                for (Object e : emails) {
-                    if (e instanceof Map<?, ?> emailMap) {
-                        Boolean primary = (Boolean) emailMap.get("primary");
-                        if (Boolean.TRUE.equals(primary)) {
-                            return (String) emailMap.get("email");
-                        }
-                    }
-                }
-            }
-            return oauthUser.getAttribute("login") + "@github.users.noreply.com";
-        }
-        return oauthUser.getAttribute("email");
-    }
-
-    private String extractDisplayName(OAuth2User oauthUser, String provider) {
-        if ("github".equals(provider)) {
-            String name = oauthUser.getAttribute("name");
-            return name != null ? name : oauthUser.getAttribute("login");
-        }
-        return oauthUser.getAttribute("name");
-    }
-
-    private String extractAvatarUrl(OAuth2User oauthUser, String provider) {
-        if ("github".equals(provider)) {
-            return oauthUser.getAttribute("avatar_url");
-        }
-        return oauthUser.getAttribute("picture");
-    }
-
-    private String extractProviderId(OAuth2User oauthUser, String provider) {
-        if ("github".equals(provider)) {
-            return oauthUser.getAttribute("id").toString();
-        }
-        return oauthUser.getAttribute("sub");
     }
 }

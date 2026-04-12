@@ -12,6 +12,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
 import java.util.Map;
 
 @RestController
@@ -41,5 +42,14 @@ public class SubmissionController {
     @Operation(summary = "Get submission", description = "Get submission status and verdict")
     public SubmissionResponse getSubmission(@PathVariable Long id) {
         return submissionService.getSubmission(id);
+    }
+
+    @GetMapping("/api/problems/{slug}/submissions")
+    @Operation(summary = "Get my submissions", description = "Get authenticated user's submissions for a problem")
+    public List<SubmissionResponse> mySubmissions(
+            @PathVariable String slug,
+            @AuthenticationPrincipal User user) {
+        if (user == null) return List.of();
+        return submissionService.getUserSubmissionsForProblem(user.getId(), slug);
     }
 }

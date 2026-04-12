@@ -1,5 +1,6 @@
 package com.deadlock.service;
 
+import com.deadlock.model.Language;
 import com.deadlock.model.Problem;
 import com.deadlock.model.Submission;
 import com.deadlock.model.User;
@@ -11,6 +12,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.context.ApplicationEventPublisher;
 
 import java.util.List;
 
@@ -24,19 +26,19 @@ class JudgeServiceTest {
     @Mock private SandboxService sandboxService;
     @Mock private StorageService storageService;
     @Mock private SubmissionRepository submissionRepository;
+    @Mock private ApplicationEventPublisher eventPublisher;
 
     private JudgeServiceImpl judgeService;
 
     @BeforeEach
     void setUp() {
-        judgeService = new JudgeServiceImpl(sandboxService, storageService, submissionRepository);
+        judgeService = new JudgeServiceImpl(sandboxService, storageService, submissionRepository, eventPublisher);
     }
 
     private Submission createSubmission(Problem problem) {
         Submission s = new Submission();
-        s.setLanguage("PYTHON");
+        s.setLanguage(Language.PYTHON);
         s.setCode("print(42)");
-        s.setStatus("PENDING");
         s.setUser(new User("test@test.com", "Test", ""));
         s.setProblem(problem);
         return s;
@@ -85,8 +87,8 @@ class JudgeServiceTest {
 
         judgeService.judge(submission);
 
-        assertThat(submission.getVerdict()).isEqualTo("ACCEPTED");
-        assertThat(submission.getStatus()).isEqualTo("COMPLETED");
+        assertThat(submission.getVerdict().name()).isEqualTo("ACCEPTED");
+        assertThat(submission.getStatus().name()).isEqualTo("COMPLETED");
     }
 
     @Test
@@ -104,7 +106,7 @@ class JudgeServiceTest {
 
         judgeService.judge(submission);
 
-        assertThat(submission.getVerdict()).isEqualTo("WRONG_ANSWER");
+        assertThat(submission.getVerdict().name()).isEqualTo("WRONG_ANSWER");
         assertThat(submission.getFailedTestCase()).isEqualTo(1);
     }
 
@@ -122,7 +124,7 @@ class JudgeServiceTest {
 
         judgeService.judge(submission);
 
-        assertThat(submission.getVerdict()).isEqualTo("TLE");
+        assertThat(submission.getVerdict().name()).isEqualTo("TLE");
     }
 
     @Test
@@ -137,7 +139,7 @@ class JudgeServiceTest {
 
         judgeService.judge(submission);
 
-        assertThat(submission.getVerdict()).isEqualTo("MLE");
+        assertThat(submission.getVerdict().name()).isEqualTo("MLE");
     }
 
     @Test
@@ -152,7 +154,7 @@ class JudgeServiceTest {
 
         judgeService.judge(submission);
 
-        assertThat(submission.getVerdict()).isEqualTo("COMPILE_ERROR");
+        assertThat(submission.getVerdict().name()).isEqualTo("COMPILE_ERROR");
     }
 
     @Test
@@ -169,7 +171,7 @@ class JudgeServiceTest {
 
         judgeService.judge(submission);
 
-        assertThat(submission.getVerdict()).isEqualTo("RUNTIME_ERROR");
+        assertThat(submission.getVerdict().name()).isEqualTo("RUNTIME_ERROR");
     }
 
     @Test
@@ -188,6 +190,6 @@ class JudgeServiceTest {
 
         judgeService.judge(submission);
 
-        assertThat(submission.getVerdict()).isEqualTo("ACCEPTED");
+        assertThat(submission.getVerdict().name()).isEqualTo("ACCEPTED");
     }
 }

@@ -55,10 +55,6 @@ public class Problem {
     private Instant createdAt = Instant.now();
 
     public String getTierLabel() {
-        if (rating <= 1000) return "Beginner";
-        if (rating <= 1400) return "Easy";
-        if (rating <= 1800) return "Medium";
-        if (rating <= 2200) return "Hard";
-        return "Expert";
+        return DifficultyTier.fromRating(rating).getLabel();
     }
 }

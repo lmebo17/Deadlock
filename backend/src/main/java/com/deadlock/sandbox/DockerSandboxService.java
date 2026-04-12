@@ -1,5 +1,6 @@
 package com.deadlock.sandbox;
 
+import com.deadlock.model.Language;
 import com.github.dockerjava.api.DockerClient;
 import com.github.dockerjava.api.command.CreateContainerResponse;
 import com.github.dockerjava.api.command.WaitContainerResultCallback;
@@ -14,24 +15,11 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 @Slf4j
 @Service
 public class DockerSandboxService implements SandboxService {
-
-    private static final Map<String, String> LANGUAGE_IMAGES = Map.of(
-            "JAVA", "deadlock-sandbox-java",
-            "PYTHON", "deadlock-sandbox-python",
-            "CPP", "deadlock-sandbox-cpp"
-    );
-
-    private static final Map<String, String> LANGUAGE_EXTENSIONS = Map.of(
-            "JAVA", "java",
-            "PYTHON", "py",
-            "CPP", "cpp"
-    );
 
     private final DockerClient dockerClient;
 
@@ -42,12 +30,15 @@ public class DockerSandboxService implements SandboxService {
     @Override
     public SandboxResult executeAll(String code, String language, List<String> testInputs,
                                      int timeLimitMs, int memoryLimitMb) {
-        String image = LANGUAGE_IMAGES.get(language.toUpperCase());
-        String ext = LANGUAGE_EXTENSIONS.get(language.toUpperCase());
-        if (image == null || ext == null) {
+        Language lang;
+        try {
+            lang = Language.valueOf(language.toUpperCase());
+        } catch (IllegalArgumentException e) {
             return new SandboxResult(false, "Unsupported language: " + language,
                     List.of(), 0, false);
         }
+        String image = lang.getDockerImage();
+        String ext = lang.getFileExtension();
 
         Path tempDir = null;
         String containerId = null;
