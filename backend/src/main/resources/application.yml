@@ -31,3 +31,9 @@ app:
     secret: ${JWT_SECRET:dev-secret-key-that-is-at-least-32-characters-long-change-in-production}
     expiration-ms: 86400000
   frontend-url: ${FRONTEND_URL:http://localhost:3000}
+  storage:
+    endpoint: ${S3_ENDPOINT:http://localhost:9000}
+    access-key: ${S3_ACCESS_KEY:deadlock}
+    secret-key: ${S3_SECRET_KEY:deadlock123}
+    bucket: ${S3_BUCKET:deadlock-problems}
+    region: ${S3_REGION:us-east-1}
