@@ -3,12 +3,18 @@
 import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
+import dynamic from "next/dynamic";
 import { Navbar } from "@/components/Navbar";
 import { MarkdownRenderer } from "@/components/MarkdownRenderer";
 import { DifficultyBadge } from "@/components/DifficultyBadge";
 import { getProblemBySlug, ProblemDetailResponse, submitCode, getSubmission, SubmissionResponse, getMySubmissions } from "@/lib/api";
 import { useAuth } from "@/lib/auth";
 import { Button } from "@/components/ui/button";
+
+const CodeEditor = dynamic(
+  () => import("@/components/CodeEditor").then((m) => ({ default: m.CodeEditor })),
+  { ssr: false }
+);
 
 export default function ProblemDetailPage() {
   const params = useParams();
@@ -211,13 +217,7 @@ function SubmitForm({ slug, onJudged }: { slug: string; onJudged: () => void }) 
           <option value="CPP">C++</option>
         </select>
       </div>
-      <textarea
-        value={code}
-        onChange={(e) => setCode(e.target.value)}
-        placeholder="Write your solution here..."
-        rows={12}
-        className="w-full rounded-lg border border-border bg-background px-4 py-3 font-mono text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary"
-      />
+      <CodeEditor language={language} value={code} onChange={setCode} />
       <div className="flex items-center gap-4">
         <Button onClick={handleSubmit} disabled={submitting || !code.trim()}>
           {submitting ? "Judging..." : "Submit"}
