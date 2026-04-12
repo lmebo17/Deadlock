@@ -50,6 +50,15 @@ public class Problem {
     @Column(name = "sample_count", nullable = false)
     private int sampleCount = 0;
 
+    @Column(name = "function_name", length = 100)
+    private String functionName;
+
+    @Column(name = "params", columnDefinition = "JSONB")
+    private String params;
+
+    @Column(name = "return_type", length = 50)
+    private String returnType;
+
     @Column(name = "created_at", nullable = false, updatable = false)
     @Setter(AccessLevel.NONE)
     private Instant createdAt = Instant.now();
