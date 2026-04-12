@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
+import Link from "next/link";
 import { Navbar } from "@/components/Navbar";
 import { MarkdownRenderer } from "@/components/MarkdownRenderer";
 import { DifficultyBadge } from "@/components/DifficultyBadge";
@@ -47,6 +48,9 @@ export default function ProblemDetailPage() {
     <div className="min-h-screen">
       <Navbar />
       <div className="container mx-auto px-4 pt-24 pb-16 max-w-4xl">
+        <Link href="/problems" className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground mb-6">
+          &larr; Back to Problems
+        </Link>
         {/* Header */}
         <div className="mb-8">
           <div className="flex items-center gap-4 mb-2">
