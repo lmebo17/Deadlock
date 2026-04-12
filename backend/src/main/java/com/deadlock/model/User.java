@@ -31,6 +31,9 @@ public class User {
     @Column(name = "token_version", nullable = false)
     private int tokenVersion = 0;
 
+    @Column(nullable = false, length = 20)
+    private String role = "USER";
+
     @Column(name = "created_at", nullable = false, updatable = false)
     private Instant createdAt = Instant.now();
 
@@ -58,6 +61,8 @@ public class User {
     public void setEloRating(int eloRating) { this.eloRating = eloRating; }
     public int getTokenVersion() { return tokenVersion; }
     public void setTokenVersion(int tokenVersion) { this.tokenVersion = tokenVersion; }
+    public String getRole() { return role; }
+    public void setRole(String role) { this.role = role; }
     public Instant getCreatedAt() { return createdAt; }
     public List<UserProvider> getProviders() { return providers; }
 
