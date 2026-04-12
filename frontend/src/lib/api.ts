@@ -114,3 +114,7 @@ export async function submitCode(slug: string, language: string, code: string): 
 export async function getSubmission(id: number): Promise<SubmissionResponse> {
   return apiFetch(`/api/submissions/${id}`);
 }
+
+export async function getMySubmissions(slug: string): Promise<SubmissionResponse[]> {
+  return apiFetch(`/api/problems/${slug}/submissions`);
+}

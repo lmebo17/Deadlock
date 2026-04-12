@@ -6,7 +6,7 @@ import Link from "next/link";
 import { Navbar } from "@/components/Navbar";
 import { MarkdownRenderer } from "@/components/MarkdownRenderer";
 import { DifficultyBadge } from "@/components/DifficultyBadge";
-import { getProblemBySlug, ProblemDetailResponse, submitCode, getSubmission, SubmissionResponse } from "@/lib/api";
+import { getProblemBySlug, ProblemDetailResponse, submitCode, getSubmission, SubmissionResponse, getMySubmissions } from "@/lib/api";
 import { useAuth } from "@/lib/auth";
 import { Button } from "@/components/ui/button";
 
@@ -16,6 +16,16 @@ export default function ProblemDetailPage() {
   const { isAuthenticated } = useAuth();
   const [problem, setProblem] = useState<ProblemDetailResponse | null>(null);
   const [loading, setLoading] = useState(true);
+  const [submissions, setSubmissions] = useState<SubmissionResponse[]>([]);
+
+  const refreshHistory = async () => {
+    if (isAuthenticated) {
+      try {
+        const subs = await getMySubmissions(slug);
+        setSubmissions(subs);
+      } catch { /* ignore if not authenticated */ }
+    }
+  };
 
   useEffect(() => {
     if (!slug) return;
@@ -24,6 +34,8 @@ export default function ProblemDetailPage() {
       .catch(() => setProblem(null))
       .finally(() => setLoading(false));
   }, [slug]);
+
+  useEffect(() => { refreshHistory(); }, [slug, isAuthenticated]);
 
   if (loading) {
     return (
@@ -110,13 +122,44 @@ export default function ProblemDetailPage() {
           ))}
         </section>
 
+        {/* Submission History */}
+        {isAuthenticated && (
+          <section className="mt-8 rounded-xl border border-border bg-card overflow-hidden">
+            <div className="border-b border-border px-6 py-4">
+              <h2 className="text-lg font-semibold">My Submissions</h2>
+            </div>
+            {submissions.length === 0 ? (
+              <div className="px-6 py-8 text-center text-muted-foreground">No submissions yet</div>
+            ) : (
+              <div>
+                <div className="grid grid-cols-[40px_120px_80px_80px_1fr] gap-4 border-b border-border bg-secondary/50 px-6 py-2 text-xs font-medium text-muted-foreground">
+                  <div>#</div><div>Verdict</div><div>Lang</div><div>Time</div><div>Submitted</div>
+                </div>
+                {submissions.map((sub, i) => {
+                  const verdictColor = sub.verdict === "ACCEPTED" ? "text-rank-pupil"
+                    : sub.status === "COMPLETED" ? "text-destructive" : "text-muted-foreground";
+                  return (
+                    <div key={sub.id} className="grid grid-cols-[40px_120px_80px_80px_1fr] gap-4 items-center border-b border-border px-6 py-3 text-sm last:border-0">
+                      <div className="font-mono text-muted-foreground">{submissions.length - i}</div>
+                      <div className={`font-mono font-semibold ${verdictColor}`}>{sub.verdict || sub.status}</div>
+                      <div className="text-muted-foreground">{sub.language}</div>
+                      <div className="text-muted-foreground">{sub.executionTimeMs ? `${sub.executionTimeMs}ms` : "-"}</div>
+                      <div className="text-muted-foreground text-xs">{new Date(sub.submittedAt).toLocaleString()}</div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </section>
+        )}
+
         {/* Submit Section */}
         <section className="mt-8 rounded-xl border border-border bg-card p-6">
           <h2 className="text-xl font-semibold mb-4">Submit Solution</h2>
           {!isAuthenticated ? (
             <p className="text-muted-foreground">Login to submit solutions</p>
           ) : (
-            <SubmitForm slug={slug} />
+            <SubmitForm slug={slug} onJudged={refreshHistory} />
           )}
         </section>
       </div>
@@ -124,7 +167,7 @@ export default function ProblemDetailPage() {
   );
 }
 
-function SubmitForm({ slug }: { slug: string }) {
+function SubmitForm({ slug, onJudged }: { slug: string; onJudged: () => void }) {
   const [language, setLanguage] = useState("PYTHON");
   const [code, setCode] = useState("");
   const [submitting, setSubmitting] = useState(false);
@@ -141,6 +184,7 @@ function SubmitForm({ slug }: { slug: string }) {
         if (sub.status === "COMPLETED") {
           setResult(sub);
           setSubmitting(false);
+          onJudged();
         } else {
           setTimeout(poll, 1500);
         }
