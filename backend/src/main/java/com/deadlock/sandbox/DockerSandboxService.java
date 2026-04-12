@@ -51,7 +51,11 @@ public class DockerSandboxService implements SandboxService {
             Files.createDirectories(resultsDir);
 
             // Write code file
-            Files.writeString(tempDir.resolve("solution." + ext), code);
+            String filename = "solution." + ext;
+            if ("JAVA".equalsIgnoreCase(language) && code.contains("class Main")) {
+                filename = "Main.java";
+            }
+            Files.writeString(tempDir.resolve(filename), code);
 
             // Write all test inputs
             for (int i = 0; i < testInputs.size(); i++) {
