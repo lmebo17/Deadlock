@@ -1,10 +1,12 @@
 package com.deadlock.controller;
 
 import com.deadlock.dto.*;
+import com.deadlock.repository.ProblemRepository;
 import com.deadlock.security.JwtAuthFilter;
 import com.deadlock.security.JwtService;
 import com.deadlock.security.OAuthSuccessHandler;
 import com.deadlock.service.ProblemService;
+import com.deadlock.service.StarterCodeService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -38,6 +40,12 @@ class ProblemControllerTest {
     private ProblemService problemService;
 
     @MockBean
+    private ProblemRepository problemRepository;
+
+    @MockBean
+    private StarterCodeService starterCodeService;
+
+    @MockBean
     private JwtAuthFilter jwtAuthFilter;
 
     @MockBean
@@ -68,7 +76,7 @@ class ProblemControllerTest {
         ProblemDetailResponse detail = new ProblemDetailResponse(
                 1L, "Two Sum", "two-sum", "Find two numbers...",
                 "First line: n", "Two indices", "2 <= n", 800, "Beginner",
-                2000, 256, 30, 3, samples);
+                2000, 256, 30, 3, samples, null, null);
         when(problemService.getProblemBySlug("two-sum")).thenReturn(detail);
 
         mockMvc.perform(get("/api/problems/two-sum"))

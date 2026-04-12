@@ -3,7 +3,11 @@ package com.deadlock.controller;
 import com.deadlock.dto.CreateProblemRequest;
 import com.deadlock.dto.ProblemDetailResponse;
 import com.deadlock.dto.ProblemResponse;
+import com.deadlock.model.Language;
+import com.deadlock.model.Problem;
+import com.deadlock.repository.ProblemRepository;
 import com.deadlock.service.ProblemService;
+import com.deadlock.service.StarterCodeService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
@@ -14,14 +18,22 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.Map;
+
 @RestController
 @Tag(name = "Problems", description = "Problem browsing and management")
 public class ProblemController {
 
     private final ProblemService problemService;
+    private final ProblemRepository problemRepository;
+    private final StarterCodeService starterCodeService;
 
-    public ProblemController(ProblemService problemService) {
+    public ProblemController(ProblemService problemService,
+                             ProblemRepository problemRepository,
+                             StarterCodeService starterCodeService) {
         this.problemService = problemService;
+        this.problemRepository = problemRepository;
+        this.starterCodeService = starterCodeService;
     }
 
     @GetMapping("/api/problems")
@@ -48,5 +60,17 @@ public class ProblemController {
     public ResponseEntity<ProblemResponse> createProblem(
             @Valid @RequestBody CreateProblemRequest request) {
         return ResponseEntity.ok(problemService.createProblem(request));
+    }
+
+    @GetMapping("/api/problems/{slug}/starter")
+    @Operation(summary = "Get starter code", description = "Get function stub for the editor")
+    public Map<String, String> getStarterCode(
+            @PathVariable String slug,
+            @RequestParam(defaultValue = "PYTHON") String language) {
+        Problem problem = problemRepository.findBySlug(slug)
+                .orElseThrow(() -> new RuntimeException("Problem not found: " + slug));
+        Language lang = Language.valueOf(language.toUpperCase());
+        String code = starterCodeService.generateStarter(problem, lang);
+        return Map.of("code", code, "language", language);
     }
 }
