@@ -1,18 +1,13 @@
 #!/usr/bin/env python3
-import sys
-input = sys.stdin.readline
+import json, sys
 
-n, q = map(int, input().split())
-a = list(map(int, input().split()))
+nums = json.loads(input())
+target = json.loads(input())
 
-out = []
-for _ in range(q):
-    x = int(input())
-    found = -1
-    for i in range(n):
-        if a[i] == x:
-            found = i + 1
-            break
-    out.append(str(found))
+found = -1
+for i in range(len(nums)):
+    if nums[i] == target:
+        found = i
+        break
 
-print("\n".join(out))
+print(json.dumps(found))

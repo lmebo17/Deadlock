@@ -9,5 +9,8 @@
   "timeLimitMs": 2000,
   "memoryLimitMb": 256,
   "sampleCount": 3,
-  "testCaseCount": 40
+  "testCaseCount": 40,
+  "functionName": "binarySearch",
+  "params": [{"name": "nums", "type": "int[]"}, {"name": "target", "type": "int"}],
+  "returnType": "int"
 }

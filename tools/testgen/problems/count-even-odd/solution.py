@@ -1,9 +1,7 @@
 #!/usr/bin/env python3
-import sys
-input = sys.stdin.readline
+import json, sys
 
-n = int(input())
-a = list(map(int, input().split()))
-even = sum(1 for x in a if x % 2 == 0)
-odd = n - even
-print(even, odd)
+nums = json.loads(input())
+even = sum(1 for x in nums if x % 2 == 0)
+odd = len(nums) - even
+print(json.dumps([even, odd]))

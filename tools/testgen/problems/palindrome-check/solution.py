@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
-import sys
-input = sys.stdin.readline
+import json, sys
 
-s = input().strip()
-print("YES" if s == s[::-1] else "NO")
+s = json.loads(input())
+print(json.dumps(s == s[::-1]))

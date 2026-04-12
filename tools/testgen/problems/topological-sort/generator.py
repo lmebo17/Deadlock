@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-import random, sys
+import random, sys, json
 
 seed = int(sys.argv[1]) if len(sys.argv) > 1 else 42
 random.seed(seed)
@@ -21,70 +21,49 @@ def gen_dag(n, m):
             edges.add((u, v))
         attempts += 1
 
-    return list(edges)
+    return [list(e) for e in edges]
 
 if seed == 0:
-    print("4 4")
-    print("1 2")
-    print("1 3")
-    print("2 4")
-    print("3 4")
+    n = 4
+    edges = [[1, 2], [1, 3], [2, 4], [3, 4]]
 elif seed == 1:
-    print("3 2")
-    print("3 1")
-    print("3 2")
+    n = 3
+    edges = [[3, 1], [3, 2]]
 elif seed == 2:
-    print("5 4")
-    print("5 1")
-    print("5 2")
-    print("4 1")
-    print("2 3")
+    n = 5
+    edges = [[5, 1], [5, 2], [4, 1], [2, 3]]
 elif seed == 3:
-    # Edge: single vertex
-    print("1 0")
+    n = 1
+    edges = []
 elif seed == 4:
-    # Edge: two vertices, one edge
-    print("2 1")
-    print("1 2")
+    n = 2
+    edges = [[1, 2]]
 elif seed == 5:
-    # Edge: no edges (all independent)
-    print("5 0")
+    n = 5
+    edges = []
 elif seed == 6:
-    # Edge: chain
+    # Chain
     n = 100
-    print(f"{n} {n - 1}")
-    for i in range(1, n):
-        print(f"{i} {i + 1}")
+    edges = [[i, i + 1] for i in range(1, n)]
 elif seed == 7:
-    # Edge: reverse chain
+    # Reverse chain
     n = 100
-    print(f"{n} {n - 1}")
-    for i in range(n, 1, -1):
-        print(f"{i} {i - 1}")
+    edges = [[i, i - 1] for i in range(n, 1, -1)]
 elif seed == 8:
-    # Edge: star from vertex 1
+    # Star from vertex 1
     n = 100
-    print(f"{n} {n - 1}")
-    for i in range(2, n + 1):
-        print(f"1 {i}")
+    edges = [[1, i] for i in range(2, n + 1)]
 elif seed == 9:
-    # Edge: large DAG
+    # Large DAG
     n = 1000
-    m = 5000
-    edges = gen_dag(n, m)
-    m = len(edges)
-    print(f"{n} {m}")
-    for u, v in edges:
-        print(f"{u} {v}")
+    edges = gen_dag(n, 5000)
 else:
     n = random.randint(1, 100000)
     max_m = min(200000, n * (n - 1) // 2)
     m = random.randint(0, min(max_m, 200000))
-    # For large n, limit m to be feasible
     if n > 1000:
         m = min(m, 200000)
     edges = gen_dag(n, m)
-    m = len(edges)
-    print(f"{n} {m}")
-    for u, v in edges:
-        print(f"{u} {v}")
+
+print(json.dumps(n))
+print(json.dumps(edges))

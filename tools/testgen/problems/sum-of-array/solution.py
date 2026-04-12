@@ -1,7 +1,5 @@
 #!/usr/bin/env python3
-import sys
-input = sys.stdin.readline
+import json, sys
 
-n = int(input())
-a = list(map(int, input().split()))
-print(sum(a))
+nums = json.loads(input())
+print(json.dumps(sum(nums)))

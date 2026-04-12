@@ -9,5 +9,8 @@
   "timeLimitMs": 3000,
   "memoryLimitMb": 256,
   "sampleCount": 3,
-  "testCaseCount": 40
+  "testCaseCount": 40,
+  "functionName": "topologicalSort",
+  "params": [{"name": "n", "type": "int"}, {"name": "edges", "type": "int[][]"}],
+  "returnType": "int[]"
 }

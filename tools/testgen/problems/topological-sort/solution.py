@@ -1,14 +1,14 @@
 #!/usr/bin/env python3
-import sys
+import json, sys
 import heapq
-input = sys.stdin.readline
 
-n, m = map(int, input().split())
+n = json.loads(input())
+edges = json.loads(input())
+
 adj = [[] for _ in range(n + 1)]
 indeg = [0] * (n + 1)
 
-for _ in range(m):
-    u, v = map(int, input().split())
+for u, v in edges:
     adj[u].append(v)
     indeg[v] += 1
 
@@ -27,4 +27,4 @@ while heap:
         if indeg[v] == 0:
             heapq.heappush(heap, v)
 
-print(" ".join(map(str, result)))
+print(json.dumps(result))

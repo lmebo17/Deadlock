@@ -1,15 +1,14 @@
 #!/usr/bin/env python3
-import sys
-input = sys.stdin.readline
+import json, sys
 
-n = int(input())
-a = list(map(int, input().split()))
+nums = json.loads(input())
 
+n = len(nums)
 # O(n^2) DP
 dp = [1] * n
 for i in range(1, n):
     for j in range(i):
-        if a[j] < a[i]:
+        if nums[j] < nums[i]:
             dp[i] = max(dp[i], dp[j] + 1)
 
-print(max(dp))
+print(json.dumps(max(dp)))

@@ -1,12 +1,11 @@
 #!/usr/bin/env python3
-import random, sys
+import random, sys, json
 
 seed = int(sys.argv[1]) if len(sys.argv) > 1 else 42
 random.seed(seed)
 
 OPEN = "([{"
 CLOSE = ")]}"
-MATCH = {')': '(', ']': '[', '}': '{'}
 
 def gen_valid(max_len):
     """Generate a valid bracket sequence."""
@@ -20,12 +19,10 @@ def gen_valid(max_len):
     while len(s) < target_len:
         remaining = target_len - len(s)
         if not stack:
-            # Must open
             idx = random.randint(0, 2)
             s.append(OPEN[idx])
             stack.append(idx)
         elif remaining <= len(stack):
-            # Must close
             idx = stack.pop()
             s.append(CLOSE[idx])
         else:
@@ -44,38 +41,31 @@ def gen_valid(max_len):
     return "".join(s)
 
 if seed == 0:
-    print("()[]{}")
+    s = "()[]{}"
 elif seed == 1:
-    print("(]")
+    s = "(]"
 elif seed == 2:
-    print("{[()]}")
+    s = "{[()]}"
 elif seed == 3:
-    # Edge: single open bracket
-    print("(")
+    s = "("
 elif seed == 4:
-    # Edge: single close bracket
-    print(")")
+    s = ")"
 elif seed == 5:
-    # Edge: empty-like — just "()"
-    print("()")
+    s = "()"
 elif seed == 6:
-    # Edge: mismatched nesting
-    print("([)]")
+    s = "([)]"
 elif seed == 7:
-    # Edge: deeply nested
-    print("((((((()))))))")
+    s = "((((((()))))))"
 elif seed == 8:
-    # Edge: all opens
-    print("((((")
+    s = "(((("
 elif seed == 9:
-    # Edge: long valid
-    print(gen_valid(100000))
+    s = gen_valid(100000)
 else:
     if random.random() < 0.4:
-        # Generate valid
-        print(gen_valid(100000))
+        s = gen_valid(100000)
     else:
-        # Generate random (likely invalid)
         n = random.randint(1, 100000)
-        chars = "()[]{}";
-        print("".join(random.choice(chars) for _ in range(n)))
+        chars = "()[]{}"
+        s = "".join(random.choice(chars) for _ in range(n))
+
+print(json.dumps(s))

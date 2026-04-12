@@ -1,14 +1,11 @@
 #!/usr/bin/env python3
-import sys
-input = sys.stdin.readline
+import json, sys
 
-n = int(input())
-a = list(map(int, input().split()))
+nums = json.loads(input())
 
 unique = []
-for i, x in enumerate(a):
-    if i == 0 or x != a[i - 1]:
+for i, x in enumerate(nums):
+    if i == 0 or x != nums[i - 1]:
         unique.append(x)
 
-print(len(unique))
-print(" ".join(map(str, unique)))
+print(json.dumps(unique))

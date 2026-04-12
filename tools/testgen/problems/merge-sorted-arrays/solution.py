@@ -1,26 +1,23 @@
 #!/usr/bin/env python3
-import sys
-input = sys.stdin.readline
+import json, sys
 
-n = int(input())
-a = list(map(int, input().split()))
-m = int(input())
-b = list(map(int, input().split()))
+a = json.loads(input())
+b = json.loads(input())
 
 result = []
 i, j = 0, 0
-while i < n and j < m:
+while i < len(a) and j < len(b):
     if a[i] <= b[j]:
         result.append(a[i])
         i += 1
     else:
         result.append(b[j])
         j += 1
-while i < n:
+while i < len(a):
     result.append(a[i])
     i += 1
-while j < m:
+while j < len(b):
     result.append(b[j])
     j += 1
 
-print(" ".join(map(str, result)))
+print(json.dumps(result))

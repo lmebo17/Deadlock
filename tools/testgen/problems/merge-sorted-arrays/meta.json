@@ -9,5 +9,8 @@
   "timeLimitMs": 2000,
   "memoryLimitMb": 256,
   "sampleCount": 3,
-  "testCaseCount": 40
+  "testCaseCount": 40,
+  "functionName": "mergeSorted",
+  "params": [{"name": "a", "type": "int[]"}, {"name": "b", "type": "int[]"}],
+  "returnType": "int[]"
 }

@@ -1,2 +1,2 @@
-listen
-silent
+"listen"
+"silent"

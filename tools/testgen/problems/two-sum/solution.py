@@ -1,14 +1,13 @@
 #!/usr/bin/env python3
-import sys
-input = sys.stdin.readline
+import json, sys
 
-n, t = map(int, input().split())
-a = list(map(int, input().split()))
+nums = json.loads(input())
+target = json.loads(input())
 
 seen = {}
-for i, x in enumerate(a):
-    comp = t - x
+for i, x in enumerate(nums):
+    comp = target - x
     if comp in seen:
-        print(seen[comp] + 1, i + 1)
-        break
+        print(json.dumps([seen[comp], i]))
+        sys.exit()
     seen[x] = i

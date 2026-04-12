@@ -1,8 +1,7 @@
 #!/usr/bin/env python3
-import sys
-input = sys.stdin.readline
+import json, sys
 
-s = input().strip()
+s = json.loads(input())
 
 # Same logic, different implementation — repeatedly remove matched pairs
 # (Much slower but verifiably correct)
@@ -25,4 +24,4 @@ for c in s:
 if len(stack) != 0:
     valid = False
 
-print("YES" if valid else "NO")
+print(json.dumps(valid))

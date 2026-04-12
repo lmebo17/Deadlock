@@ -1,18 +1,12 @@
 #!/usr/bin/env python3
-import sys
+import json, sys
 from bisect import bisect_left
-input = sys.stdin.readline
 
-n, q = map(int, input().split())
-a = list(map(int, input().split()))
+nums = json.loads(input())
+target = json.loads(input())
 
-out = []
-for _ in range(q):
-    x = int(input())
-    idx = bisect_left(a, x)
-    if idx < n and a[idx] == x:
-        out.append(str(idx + 1))
-    else:
-        out.append("-1")
-
-print("\n".join(out))
+idx = bisect_left(nums, target)
+if idx < len(nums) and nums[idx] == target:
+    print(json.dumps(idx))
+else:
+    print(json.dumps(-1))

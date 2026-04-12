@@ -1,13 +1,13 @@
 #!/usr/bin/env python3
-import sys
-input = sys.stdin.readline
+import json, sys
 
-n, m = map(int, input().split())
+n = json.loads(input())
+edges = json.loads(input())
+
 adj = [[] for _ in range(n + 1)]
 indeg = [0] * (n + 1)
 
-for _ in range(m):
-    u, v = map(int, input().split())
+for u, v in edges:
     adj[u].append(v)
     indeg[v] += 1
 
@@ -16,7 +16,6 @@ result = []
 removed = [False] * (n + 1)
 
 for _ in range(n):
-    # Find smallest vertex with in-degree 0
     chosen = -1
     for v in range(1, n + 1):
         if not removed[v] and indeg[v] == 0:
@@ -27,4 +26,4 @@ for _ in range(n):
     for v in adj[chosen]:
         indeg[v] -= 1
 
-print(" ".join(map(str, result)))
+print(json.dumps(result))

@@ -1,8 +1,7 @@
 #!/usr/bin/env python3
-import sys
-input = sys.stdin.readline
+import json, sys
 
-s = input().strip()
+s = json.loads(input())
 stack = []
 match = {')': '(', ']': '[', '}': '{'}
 
@@ -19,4 +18,4 @@ for c in s:
 if stack:
     valid = False
 
-print("YES" if valid else "NO")
+print(json.dumps(valid))

@@ -1,18 +1,16 @@
 #!/usr/bin/env python3
-import sys
+import json, sys
 from bisect import bisect_left
-input = sys.stdin.readline
 
-n = int(input())
-a = list(map(int, input().split()))
+nums = json.loads(input())
 
 # O(n log n) patience sorting
 tails = []
-for x in a:
+for x in nums:
     pos = bisect_left(tails, x)
     if pos == len(tails):
         tails.append(x)
     else:
         tails[pos] = x
 
-print(len(tails))
+print(json.dumps(len(tails)))

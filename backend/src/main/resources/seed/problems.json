@@ -10,7 +10,19 @@
     "timeLimitMs": 2000,
     "memoryLimitMb": 256,
     "sampleCount": 3,
-    "testCaseCount": 40
+    "testCaseCount": 40,
+    "functionName": "isAnagram",
+    "params": [
+      {
+        "name": "s",
+        "type": "string"
+      },
+      {
+        "name": "t",
+        "type": "string"
+      }
+    ],
+    "returnType": "bool"
   },
   {
     "title": "Binary Search",
@@ -23,7 +35,19 @@
     "timeLimitMs": 2000,
     "memoryLimitMb": 256,
     "sampleCount": 3,
-    "testCaseCount": 40
+    "testCaseCount": 40,
+    "functionName": "binarySearch",
+    "params": [
+      {
+        "name": "nums",
+        "type": "int[]"
+      },
+      {
+        "name": "target",
+        "type": "int"
+      }
+    ],
+    "returnType": "int"
   },
   {
     "title": "Count Even and Odd",
@@ -36,7 +60,15 @@
     "timeLimitMs": 2000,
     "memoryLimitMb": 256,
     "sampleCount": 3,
-    "testCaseCount": 40
+    "testCaseCount": 40,
+    "functionName": "countEvenOdd",
+    "params": [
+      {
+        "name": "nums",
+        "type": "int[]"
+      }
+    ],
+    "returnType": "int[]"
   },
   {
     "title": "Most Frequent Element",
@@ -49,7 +81,15 @@
     "timeLimitMs": 2000,
     "memoryLimitMb": 256,
     "sampleCount": 3,
-    "testCaseCount": 40
+    "testCaseCount": 40,
+    "functionName": "mostFrequent",
+    "params": [
+      {
+        "name": "nums",
+        "type": "int[]"
+      }
+    ],
+    "returnType": "int"
   },
   {
     "title": "Longest Increasing Subsequence",
@@ -62,7 +102,15 @@
     "timeLimitMs": 3000,
     "memoryLimitMb": 256,
     "sampleCount": 3,
-    "testCaseCount": 40
+    "testCaseCount": 40,
+    "functionName": "lengthOfLIS",
+    "params": [
+      {
+        "name": "nums",
+        "type": "int[]"
+      }
+    ],
+    "returnType": "int"
   },
   {
     "title": "Maximum Element",
@@ -75,7 +123,15 @@
     "timeLimitMs": 2000,
     "memoryLimitMb": 256,
     "sampleCount": 3,
-    "testCaseCount": 40
+    "testCaseCount": 40,
+    "functionName": "maxElement",
+    "params": [
+      {
+        "name": "nums",
+        "type": "int[]"
+      }
+    ],
+    "returnType": "int"
   },
   {
     "title": "Merge Sorted Arrays",
@@ -88,7 +144,19 @@
     "timeLimitMs": 2000,
     "memoryLimitMb": 256,
     "sampleCount": 3,
-    "testCaseCount": 40
+    "testCaseCount": 40,
+    "functionName": "mergeSorted",
+    "params": [
+      {
+        "name": "a",
+        "type": "int[]"
+      },
+      {
+        "name": "b",
+        "type": "int[]"
+      }
+    ],
+    "returnType": "int[]"
   },
   {
     "title": "Number of Islands",
@@ -101,7 +169,15 @@
     "timeLimitMs": 3000,
     "memoryLimitMb": 256,
     "sampleCount": 3,
-    "testCaseCount": 40
+    "testCaseCount": 40,
+    "functionName": "numIslands",
+    "params": [
+      {
+        "name": "grid",
+        "type": "int[][]"
+      }
+    ],
+    "returnType": "int"
   },
   {
     "title": "Palindrome Check",
@@ -114,7 +190,15 @@
     "timeLimitMs": 2000,
     "memoryLimitMb": 256,
     "sampleCount": 3,
-    "testCaseCount": 40
+    "testCaseCount": 40,
+    "functionName": "isPalindrome",
+    "params": [
+      {
+        "name": "s",
+        "type": "string"
+      }
+    ],
+    "returnType": "bool"
   },
   {
     "title": "Remove Duplicates",
@@ -127,7 +211,15 @@
     "timeLimitMs": 2000,
     "memoryLimitMb": 256,
     "sampleCount": 3,
-    "testCaseCount": 40
+    "testCaseCount": 40,
+    "functionName": "removeDuplicates",
+    "params": [
+      {
+        "name": "nums",
+        "type": "int[]"
+      }
+    ],
+    "returnType": "int[]"
   },
   {
     "title": "Reverse Array",
@@ -140,7 +232,15 @@
     "timeLimitMs": 2000,
     "memoryLimitMb": 256,
     "sampleCount": 3,
-    "testCaseCount": 40
+    "testCaseCount": 40,
+    "functionName": "reverseArray",
+    "params": [
+      {
+        "name": "nums",
+        "type": "int[]"
+      }
+    ],
+    "returnType": "int[]"
   },
   {
     "title": "Sum of Array",
@@ -153,7 +253,15 @@
     "timeLimitMs": 2000,
     "memoryLimitMb": 256,
     "sampleCount": 3,
-    "testCaseCount": 40
+    "testCaseCount": 40,
+    "functionName": "sumArray",
+    "params": [
+      {
+        "name": "nums",
+        "type": "int[]"
+      }
+    ],
+    "returnType": "int"
   },
   {
     "title": "Topological Sort",
@@ -166,7 +274,19 @@
     "timeLimitMs": 3000,
     "memoryLimitMb": 256,
     "sampleCount": 3,
-    "testCaseCount": 40
+    "testCaseCount": 40,
+    "functionName": "topologicalSort",
+    "params": [
+      {
+        "name": "n",
+        "type": "int"
+      },
+      {
+        "name": "edges",
+        "type": "int[][]"
+      }
+    ],
+    "returnType": "int[]"
   },
   {
     "title": "Two Sum",
@@ -179,7 +299,19 @@
     "timeLimitMs": 2000,
     "memoryLimitMb": 256,
     "sampleCount": 3,
-    "testCaseCount": 40
+    "testCaseCount": 40,
+    "functionName": "twoSum",
+    "params": [
+      {
+        "name": "nums",
+        "type": "int[]"
+      },
+      {
+        "name": "target",
+        "type": "int"
+      }
+    ],
+    "returnType": "int[]"
   },
   {
     "title": "Valid Parentheses",
@@ -192,6 +324,14 @@
     "timeLimitMs": 2000,
     "memoryLimitMb": 256,
     "sampleCount": 3,
-    "testCaseCount": 40
+    "testCaseCount": 40,
+    "functionName": "isValid",
+    "params": [
+      {
+        "name": "s",
+        "type": "string"
+      }
+    ],
+    "returnType": "bool"
   }
 ]

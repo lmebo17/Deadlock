@@ -1,65 +1,58 @@
 #!/usr/bin/env python3
-import random, sys, string
+import random, sys, string, json
 
 seed = int(sys.argv[1]) if len(sys.argv) > 1 else 42
 random.seed(seed)
 
 if seed == 0:
-    print("listen")
-    print("silent")
+    s = "listen"
+    t = "silent"
 elif seed == 1:
-    print("hello")
-    print("world")
+    s = "hello"
+    t = "world"
 elif seed == 2:
-    print("aabb")
-    print("bbaa")
+    s = "aabb"
+    t = "bbaa"
 elif seed == 3:
-    # Edge: single char same
-    print("a")
-    print("a")
+    s = "a"
+    t = "a"
 elif seed == 4:
-    # Edge: single char different
-    print("a")
-    print("b")
+    s = "a"
+    t = "b"
 elif seed == 5:
-    # Edge: different lengths
-    print("abc")
-    print("abcd")
+    s = "abc"
+    t = "abcd"
 elif seed == 6:
-    # Edge: same string
-    print("abcdef")
-    print("abcdef")
+    s = "abcdef"
+    t = "abcdef"
 elif seed == 7:
-    # Edge: all same char
-    print("aaaa")
-    print("aaaa")
+    s = "aaaa"
+    t = "aaaa"
 elif seed == 8:
-    # Edge: all same char but different count
-    print("aaa")
-    print("aaaa")
+    s = "aaa"
+    t = "aaaa"
 elif seed == 9:
-    # Edge: long anagram
     n = 100000
-    s = list("".join(random.choice(string.ascii_lowercase) for _ in range(n)))
-    t = s[:]
-    random.shuffle(t)
-    print("".join(s))
-    print("".join(t))
+    s_list = list("".join(random.choice(string.ascii_lowercase) for _ in range(n)))
+    t_list = s_list[:]
+    random.shuffle(t_list)
+    s = "".join(s_list)
+    t = "".join(t_list)
 else:
     n = random.randint(1, 100000)
     if random.random() < 0.4:
-        # Generate anagram
-        s = list("".join(random.choice(string.ascii_lowercase) for _ in range(n)))
-        t = s[:]
-        random.shuffle(t)
-        print("".join(s))
-        print("".join(t))
+        s_list = list("".join(random.choice(string.ascii_lowercase) for _ in range(n)))
+        t_list = s_list[:]
+        random.shuffle(t_list)
+        s = "".join(s_list)
+        t = "".join(t_list)
     elif random.random() < 0.5:
-        # Different lengths
         m = random.randint(1, 100000)
-        print("".join(random.choice(string.ascii_lowercase) for _ in range(n)))
-        print("".join(random.choice(string.ascii_lowercase) for _ in range(m)))
+        s = "".join(random.choice(string.ascii_lowercase) for _ in range(n))
+        t = "".join(random.choice(string.ascii_lowercase) for _ in range(m))
     else:
-        # Same length but not anagram
-        print("".join(random.choice(string.ascii_lowercase) for _ in range(n)))
-        print("".join(random.choice(string.ascii_lowercase) for _ in range(n)))
+        s = "".join(random.choice(string.ascii_lowercase) for _ in range(n))
+        t = "".join(random.choice(string.ascii_lowercase) for _ in range(n))
+
+print(json.dumps(s))
+print(json.dumps(t))

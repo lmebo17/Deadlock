@@ -1,12 +1,8 @@
 #!/usr/bin/env python3
-import sys
+import json, sys
 from collections import Counter
-input = sys.stdin.readline
 
-s = input().strip()
-t = input().strip()
+s = json.loads(input())
+t = json.loads(input())
 
-if Counter(s) == Counter(t):
-    print("YES")
-else:
-    print("NO")
+print(json.dumps(Counter(s) == Counter(t)))
