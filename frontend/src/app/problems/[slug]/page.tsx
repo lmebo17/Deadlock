@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
 import dynamic from "next/dynamic";
@@ -179,6 +179,7 @@ function SubmitForm({ slug, onJudged }: { slug: string; onJudged: () => void }) 
   const [previousStarter, setPreviousStarter] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [result, setResult] = useState<SubmissionResponse | null>(null);
+  const submittingRef = useRef(false);
 
   useEffect(() => {
       getStarterCode(slug, language)
@@ -192,7 +193,8 @@ function SubmitForm({ slug, onJudged }: { slug: string; onJudged: () => void }) 
   }, [slug, language]);
 
   const handleSubmit = async () => {
-    if (!code.trim()) return;
+    if (!code.trim() || submittingRef.current) return;
+    submittingRef.current = true;
     setSubmitting(true);
     setResult(null);
     try {
@@ -202,6 +204,7 @@ function SubmitForm({ slug, onJudged }: { slug: string; onJudged: () => void }) 
         if (sub.status === "COMPLETED") {
           setResult(sub);
           setSubmitting(false);
+          submittingRef.current = false;
           onJudged();
         } else {
           setTimeout(poll, 1500);
@@ -210,6 +213,7 @@ function SubmitForm({ slug, onJudged }: { slug: string; onJudged: () => void }) 
       poll();
     } catch {
       setSubmitting(false);
+      submittingRef.current = false;
     }
   };
 
