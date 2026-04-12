@@ -3,6 +3,7 @@ package com.deadlock.service;
 import com.deadlock.dto.CreateProblemRequest;
 import com.deadlock.dto.ProblemDetailResponse;
 import com.deadlock.dto.ProblemResponse;
+import com.deadlock.exception.ResourceNotFoundException;
 import com.deadlock.model.Problem;
 import com.deadlock.repository.ProblemRepository;
 import org.junit.jupiter.api.BeforeEach;
@@ -104,7 +105,7 @@ class ProblemServiceTest {
         when(problemRepository.findBySlug("nonexistent")).thenReturn(Optional.empty());
 
         assertThatThrownBy(() -> problemService.getProblemBySlug("nonexistent"))
-                .isInstanceOf(RuntimeException.class);
+                .isInstanceOf(ResourceNotFoundException.class);
     }
 
     @Test

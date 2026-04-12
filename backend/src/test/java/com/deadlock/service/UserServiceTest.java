@@ -119,7 +119,7 @@ class UserServiceTest {
         when(userRepository.findById(1L)).thenReturn(Optional.of(user));
 
         assertThatThrownBy(() -> userService.setUsername(1L, "ab"))
-                .isInstanceOf(com.deadlock.exception.InvalidInputException.class);
+                .isInstanceOf(InvalidInputException.class);
     }
 
     @Test

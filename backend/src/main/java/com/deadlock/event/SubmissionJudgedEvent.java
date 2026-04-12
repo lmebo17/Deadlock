@@ -1,6 +1,5 @@
 package com.deadlock.event;
 
-import com.deadlock.model.Submission;
 import lombok.Getter;
 import org.springframework.context.ApplicationEvent;
 
