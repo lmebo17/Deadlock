@@ -1,0 +1,13 @@
+{
+  "title": "Anagram Check",
+  "slug": "anagram-check",
+  "description": "Given two strings $s$ and $t$ consisting of lowercase English letters, determine whether $t$ is an anagram of $s$.\n\nTwo strings are anagrams if one can be obtained by rearranging the letters of the other.",
+  "inputFormat": "The first line contains a string $s$ ($1 \\leq |s| \\leq 10^5$) consisting of lowercase English letters.\n\nThe second line contains a string $t$ ($1 \\leq |t| \\leq 10^5$) consisting of lowercase English letters.",
+  "outputFormat": "Print \"YES\" if the strings are anagrams, \"NO\" otherwise.",
+  "constraints": "$1 \\leq |s|, |t| \\leq 10^5$\nBoth strings consist of lowercase English letters.",
+  "rating": 1400,
+  "timeLimitMs": 2000,
+  "memoryLimitMb": 256,
+  "sampleCount": 3,
+  "testCaseCount": 40
+}

@@ -1,0 +1,13 @@
+{
+  "title": "Number of Islands",
+  "slug": "number-of-islands",
+  "description": "Given a 2D grid of size $n \\times m$ consisting of '1's (land) and '0's (water), count the number of islands.\n\nAn island is a group of '1's connected horizontally or vertically (not diagonally). The grid is surrounded by water on all sides.",
+  "inputFormat": "The first line contains two integers $n$ and $m$ ($1 \\leq n, m \\leq 500$) — the number of rows and columns.\n\nEach of the next $n$ lines contains a string of $m$ characters, each being '0' or '1'.",
+  "outputFormat": "Print a single integer — the number of islands.",
+  "constraints": "$1 \\leq n, m \\leq 500$\n$n \\times m \\leq 250000$\nEach cell is either '0' or '1'.",
+  "rating": 1900,
+  "timeLimitMs": 3000,
+  "memoryLimitMb": 256,
+  "sampleCount": 3,
+  "testCaseCount": 40
+}

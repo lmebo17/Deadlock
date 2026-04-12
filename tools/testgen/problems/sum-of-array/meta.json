@@ -1,0 +1,13 @@
+{
+  "title": "Sum of Array",
+  "slug": "sum-of-array",
+  "description": "Given an array of $n$ integers, find their sum.\n\nNote that the sum may be large, so use appropriate data types.",
+  "inputFormat": "The first line contains an integer $n$ ($1 \\leq n \\leq 10^5$) — the size of the array.\n\nThe second line contains $n$ space-separated integers $a_1, a_2, \\ldots, a_n$ ($-10^9 \\leq a_i \\leq 10^9$).",
+  "outputFormat": "Print a single integer — the sum of all elements.",
+  "constraints": "$1 \\leq n \\leq 10^5$\n$-10^9 \\leq a_i \\leq 10^9$",
+  "rating": 800,
+  "timeLimitMs": 2000,
+  "memoryLimitMb": 256,
+  "sampleCount": 3,
+  "testCaseCount": 40
+}

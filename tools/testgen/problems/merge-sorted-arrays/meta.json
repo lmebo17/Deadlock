@@ -1,0 +1,13 @@
+{
+  "title": "Merge Sorted Arrays",
+  "slug": "merge-sorted-arrays",
+  "description": "Given two sorted arrays of integers, merge them into a single sorted array.\n\nBoth arrays are sorted in non-decreasing order.",
+  "inputFormat": "The first line contains an integer $n$ ($1 \\leq n \\leq 10^5$) — the size of the first array.\n\nThe second line contains $n$ space-separated integers $a_1, a_2, \\ldots, a_n$ ($-10^9 \\leq a_i \\leq 10^9$) in non-decreasing order.\n\nThe third line contains an integer $m$ ($1 \\leq m \\leq 10^5$) — the size of the second array.\n\nThe fourth line contains $m$ space-separated integers $b_1, b_2, \\ldots, b_m$ ($-10^9 \\leq b_i \\leq 10^9$) in non-decreasing order.",
+  "outputFormat": "Print $n + m$ space-separated integers — the merged sorted array.",
+  "constraints": "$1 \\leq n, m \\leq 10^5$\n$-10^9 \\leq a_i, b_i \\leq 10^9$\nBoth arrays are sorted in non-decreasing order.",
+  "rating": 1300,
+  "timeLimitMs": 2000,
+  "memoryLimitMb": 256,
+  "sampleCount": 3,
+  "testCaseCount": 40
+}

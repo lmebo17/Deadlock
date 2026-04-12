@@ -1,0 +1,13 @@
+{
+  "title": "Topological Sort",
+  "slug": "topological-sort",
+  "description": "Given a directed acyclic graph (DAG) with $n$ vertices and $m$ edges, find a topological ordering of its vertices.\n\nA topological ordering is a linear ordering of vertices such that for every directed edge $(u, v)$, vertex $u$ comes before vertex $v$.\n\nIf there are multiple valid orderings, print the lexicographically smallest one.",
+  "inputFormat": "The first line contains two integers $n$ and $m$ ($1 \\leq n \\leq 10^5$, $0 \\leq m \\leq 2 \\cdot 10^5$) — the number of vertices and edges.\n\nEach of the next $m$ lines contains two integers $u$ and $v$ ($1 \\leq u, v \\leq n$, $u \\neq v$) — a directed edge from $u$ to $v$.\n\nIt is guaranteed that the graph is a DAG (no cycles) and contains no duplicate edges.",
+  "outputFormat": "Print $n$ space-separated integers — the lexicographically smallest topological ordering of the vertices.",
+  "constraints": "$1 \\leq n \\leq 10^5$\n$0 \\leq m \\leq 2 \\cdot 10^5$\nThe graph is a DAG with no duplicate edges.",
+  "rating": 2000,
+  "timeLimitMs": 3000,
+  "memoryLimitMb": 256,
+  "sampleCount": 3,
+  "testCaseCount": 40
+}

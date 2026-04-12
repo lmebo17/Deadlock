@@ -1,0 +1,13 @@
+{
+  "title": "Two Sum",
+  "slug": "two-sum",
+  "description": "Given an array of $n$ integers and a target value $t$, find two distinct indices $i$ and $j$ ($1$-indexed) such that $a_i + a_j = t$.\n\nIt is guaranteed that exactly one solution exists.",
+  "inputFormat": "The first line contains two integers $n$ and $t$ ($2 \\leq n \\leq 10^5$, $-2 \\cdot 10^9 \\leq t \\leq 2 \\cdot 10^9$) — the size of the array and the target sum.\n\nThe second line contains $n$ space-separated integers $a_1, a_2, \\ldots, a_n$ ($-10^9 \\leq a_i \\leq 10^9$).",
+  "outputFormat": "Print two space-separated integers $i$ and $j$ ($1 \\leq i < j \\leq n$) — the 1-indexed positions of the two elements that sum to $t$.",
+  "constraints": "$2 \\leq n \\leq 10^5$\n$-10^9 \\leq a_i \\leq 10^9$\n$-2 \\cdot 10^9 \\leq t \\leq 2 \\cdot 10^9$\nExactly one valid pair exists.",
+  "rating": 1200,
+  "timeLimitMs": 2000,
+  "memoryLimitMb": 256,
+  "sampleCount": 3,
+  "testCaseCount": 40
+}

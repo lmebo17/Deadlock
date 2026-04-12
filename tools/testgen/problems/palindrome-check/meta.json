@@ -1,0 +1,13 @@
+{
+  "title": "Palindrome Check",
+  "slug": "palindrome-check",
+  "description": "Given a string $s$ consisting of lowercase English letters, determine whether it is a palindrome.\n\nA string is a palindrome if it reads the same forwards and backwards.",
+  "inputFormat": "The first line contains a single string $s$ ($1 \\leq |s| \\leq 10^5$) consisting of lowercase English letters.",
+  "outputFormat": "Print \"YES\" if the string is a palindrome, \"NO\" otherwise.",
+  "constraints": "$1 \\leq |s| \\leq 10^5$\nThe string consists of lowercase English letters only.",
+  "rating": 1000,
+  "timeLimitMs": 2000,
+  "memoryLimitMb": 256,
+  "sampleCount": 3,
+  "testCaseCount": 40
+}

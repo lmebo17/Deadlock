@@ -1,0 +1,13 @@
+{
+  "title": "Remove Duplicates",
+  "slug": "remove-duplicates",
+  "description": "Given a sorted array of $n$ integers, remove the duplicates in-place and print the unique elements.\n\nThe array is sorted in non-decreasing order.",
+  "inputFormat": "The first line contains an integer $n$ ($1 \\leq n \\leq 10^5$) — the size of the array.\n\nThe second line contains $n$ space-separated integers $a_1, a_2, \\ldots, a_n$ ($-10^9 \\leq a_i \\leq 10^9$) in non-decreasing order.",
+  "outputFormat": "On the first line, print $k$ — the number of unique elements.\n\nOn the second line, print the $k$ unique elements in their original order, separated by spaces.",
+  "constraints": "$1 \\leq n \\leq 10^5$\n$-10^9 \\leq a_i \\leq 10^9$\n$a_1 \\leq a_2 \\leq \\ldots \\leq a_n$",
+  "rating": 1200,
+  "timeLimitMs": 2000,
+  "memoryLimitMb": 256,
+  "sampleCount": 3,
+  "testCaseCount": 40
+}

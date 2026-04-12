@@ -1,0 +1,13 @@
+{
+  "title": "Binary Search",
+  "slug": "binary-search",
+  "description": "Given a sorted array of $n$ distinct integers and $q$ queries, for each query find the 1-indexed position of the target element in the array, or report that it does not exist.",
+  "inputFormat": "The first line contains two integers $n$ and $q$ ($1 \\leq n, q \\leq 10^5$) — the size of the array and the number of queries.\n\nThe second line contains $n$ space-separated integers $a_1, a_2, \\ldots, a_n$ ($-10^9 \\leq a_i \\leq 10^9$) in strictly increasing order.\n\nEach of the next $q$ lines contains a single integer $x$ ($-10^9 \\leq x \\leq 10^9$) — the query target.",
+  "outputFormat": "For each query, print the 1-indexed position of $x$ in the array, or $-1$ if $x$ is not present.",
+  "constraints": "$1 \\leq n, q \\leq 10^5$\n$-10^9 \\leq a_i, x \\leq 10^9$\nAll $a_i$ are distinct and sorted in increasing order.",
+  "rating": 1500,
+  "timeLimitMs": 2000,
+  "memoryLimitMb": 256,
+  "sampleCount": 3,
+  "testCaseCount": 40
+}
