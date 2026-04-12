@@ -27,14 +27,17 @@ public class JudgeServiceImpl implements JudgeService {
     private final StorageService storageService;
     private final SubmissionRepository submissionRepository;
     private final ApplicationEventPublisher eventPublisher;
+    private final WrapperCodeService wrapperCodeService;
 
     public JudgeServiceImpl(SandboxService sandboxService, StorageService storageService,
                             SubmissionRepository submissionRepository,
-                            ApplicationEventPublisher eventPublisher) {
+                            ApplicationEventPublisher eventPublisher,
+                            WrapperCodeService wrapperCodeService) {
         this.sandboxService = sandboxService;
         this.storageService = storageService;
         this.submissionRepository = submissionRepository;
         this.eventPublisher = eventPublisher;
+        this.wrapperCodeService = wrapperCodeService;
     }
 
     @Override
@@ -59,9 +62,16 @@ public class JudgeServiceImpl implements JudgeService {
                         storageService.downloadFile(prefix + idx + "-output.txt"), StandardCharsets.UTF_8));
             }
 
+            // Wrap code if problem uses function signatures
+            String codeToRun = submission.getCode();
+            if (problem.getFunctionName() != null) {
+                codeToRun = wrapperCodeService.wrapCode(
+                        submission.getCode(), problem, submission.getLanguage());
+            }
+
             // Execute all tests in one container
             SandboxResult result = sandboxService.executeAll(
-                    submission.getCode(), submission.getLanguage().name(), testInputs,
+                    codeToRun, submission.getLanguage().name(), testInputs,
                     problem.getTimeLimitMs(), problem.getMemoryLimitMb());
 
             // Handle compile error

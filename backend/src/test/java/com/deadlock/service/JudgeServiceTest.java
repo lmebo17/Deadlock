@@ -24,12 +24,13 @@ class JudgeServiceTest {
     @Mock private StorageService storageService;
     @Mock private SubmissionRepository submissionRepository;
     @Mock private ApplicationEventPublisher eventPublisher;
+    @Mock private WrapperCodeService wrapperCodeService;
 
     private JudgeServiceImpl judgeService;
 
     @BeforeEach
     void setUp() {
-        judgeService = new JudgeServiceImpl(sandboxService, storageService, submissionRepository, eventPublisher);
+        judgeService = new JudgeServiceImpl(sandboxService, storageService, submissionRepository, eventPublisher, wrapperCodeService);
     }
 
     private Submission createSubmission(Problem problem) {
