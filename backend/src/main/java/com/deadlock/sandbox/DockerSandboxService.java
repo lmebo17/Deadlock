@@ -11,10 +11,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
-import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
@@ -24,6 +21,7 @@ import java.util.concurrent.TimeUnit;
 public class DockerSandboxService implements SandboxService {
 
     private final DockerClient dockerClient;
+    private final SandboxFileManager fileManager;
 
     @Override
     public SandboxResult executeAll(String code, String language, List<String> testInputs,
@@ -36,33 +34,12 @@ public class DockerSandboxService implements SandboxService {
                     List.of(), 0, false);
         }
         String image = lang.getDockerImage();
-        String ext = lang.getFileExtension();
 
         Path tempDir = null;
         String containerId = null;
         try {
-            // Set up temp directory
-            tempDir = Files.createTempDirectory("deadlock-sandbox-");
-            Path testsDir = tempDir.resolve("tests");
-            Path resultsDir = tempDir.resolve("results");
-            Files.createDirectories(testsDir);
-            Files.createDirectories(resultsDir);
-
-            // Write code file
-            String filename = "solution." + ext;
-            if ("JAVA".equalsIgnoreCase(language) && code.contains("class Main")) {
-                filename = "Main.java";
-            }
-            Files.writeString(tempDir.resolve(filename), code);
-
-            // Write all test inputs
-            for (int i = 0; i < testInputs.size(); i++) {
-                String idx = String.format("%02d", i + 1);
-                Files.writeString(testsDir.resolve(idx + "-input.txt"), testInputs.get(i));
-            }
-
-            // Make everything accessible by sandbox user (uid 1000)
-            setPermissionsRecursive(tempDir);
+            // Set up temp directory with code and test files
+            tempDir = fileManager.createSandboxDir(code, language, testInputs);
 
             int timeLimitSec = Math.max(1, timeLimitMs / 1000);
             int overallTimeoutSec = Math.min(timeLimitSec * testInputs.size() + 10, 120);
@@ -108,43 +85,13 @@ public class DockerSandboxService implements SandboxService {
             }
 
             // Check compile error
-            Path compileErrorFile = resultsDir.resolve("compile_error.txt");
-            Path statusFile = resultsDir.resolve("status.txt");
-            if (Files.exists(statusFile)) {
-                String status = Files.readString(statusFile, StandardCharsets.UTF_8).trim();
-                if ("COMPILE_ERROR".equals(status)) {
-                    String compileErr = Files.exists(compileErrorFile)
-                            ? Files.readString(compileErrorFile, StandardCharsets.UTF_8) : "";
-                    return new SandboxResult(true, compileErr, List.of(), totalTime, false);
-                }
+            SandboxResult compileError = fileManager.readCompileError(tempDir, totalTime);
+            if (compileError != null) {
+                return compileError;
             }
 
             // Read test results
-            List<SandboxResult.TestCaseResult> results = new ArrayList<>();
-            for (int i = 0; i < testInputs.size(); i++) {
-                String idx = String.format("%02d", i + 1);
-                Path outputFile = resultsDir.resolve(idx + "-output.txt");
-                Path exitFile = resultsDir.resolve(idx + "-exit.txt");
-                Path errorFile = resultsDir.resolve(idx + "-error.txt");
-
-                String stdout = Files.exists(outputFile)
-                        ? Files.readString(outputFile, StandardCharsets.UTF_8) : "";
-                String stderr = Files.exists(errorFile)
-                        ? Files.readString(errorFile, StandardCharsets.UTF_8) : "";
-                int exitCode = 0;
-                boolean timedOut = false;
-
-                if (Files.exists(exitFile)) {
-                    exitCode = Integer.parseInt(Files.readString(exitFile, StandardCharsets.UTF_8).trim());
-                    timedOut = (exitCode == 124);
-                } else {
-                    // No exit file means container died before reaching this test (OOM/TLE on earlier test)
-                    break;
-                }
-
-                results.add(new SandboxResult.TestCaseResult(i + 1, exitCode, stdout, stderr, timedOut));
-            }
-
+            List<SandboxResult.TestCaseResult> results = fileManager.readResults(tempDir, testInputs.size());
             return new SandboxResult(false, null, results, totalTime, false);
 
         } catch (Exception e) {
@@ -157,38 +104,8 @@ public class DockerSandboxService implements SandboxService {
                 catch (Exception e) { log.warn("Failed to remove container {}", containerId, e); }
             }
             if (tempDir != null) {
-                deleteRecursive(tempDir);
+                fileManager.cleanup(tempDir);
             }
         }
-    }
-
-    private void setPermissionsRecursive(Path dir) {
-        dir.toFile().setReadable(true, false);
-        dir.toFile().setWritable(true, false);
-        dir.toFile().setExecutable(true, false);
-        var files = dir.toFile().listFiles();
-        if (files != null) {
-            for (var f : files) {
-                f.setReadable(true, false);
-                f.setWritable(true, false);
-                if (f.isDirectory()) {
-                    f.setExecutable(true, false);
-                    setPermissionsRecursive(f.toPath());
-                }
-            }
-        }
-    }
-
-    private void deleteRecursive(Path dir) {
-        try {
-            var files = dir.toFile().listFiles();
-            if (files != null) {
-                for (var f : files) {
-                    if (f.isDirectory()) deleteRecursive(f.toPath());
-                    else f.delete();
-                }
-            }
-            dir.toFile().delete();
-        } catch (Exception e) { log.warn("Failed to clean up temp directory {}", dir, e); }
     }
 }

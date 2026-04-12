@@ -2,8 +2,14 @@ package com.deadlock.service;
 
 import com.deadlock.model.Language;
 import com.deadlock.model.Problem;
+import com.deadlock.service.codegen.CppStrategy;
+import com.deadlock.service.codegen.JavaStrategy;
+import com.deadlock.service.codegen.LanguageWrapperStrategy;
+import com.deadlock.service.codegen.PythonStrategy;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+
+import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -13,7 +19,12 @@ class StarterCodeServiceTest {
 
     @BeforeEach
     void setUp() {
-        service = new StarterCodeServiceImpl();
+        List<LanguageWrapperStrategy> strategies = List.of(
+                new PythonStrategy(),
+                new JavaStrategy(),
+                new CppStrategy()
+        );
+        service = new StarterCodeServiceImpl(strategies);
     }
 
     private Problem createProblem(String functionName, String returnType, String params) {
