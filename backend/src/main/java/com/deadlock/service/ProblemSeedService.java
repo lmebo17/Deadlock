@@ -72,6 +72,16 @@ public class ProblemSeedService {
             problem.setMemoryLimitMb(node.has("memoryLimitMb") ? node.get("memoryLimitMb").asInt() : 256);
             problem.setSampleCount(node.get("sampleCount").asInt());
 
+            if (node.has("functionName")) {
+                problem.setFunctionName(node.get("functionName").asText());
+            }
+            if (node.has("params")) {
+                problem.setParams(objectMapper.writeValueAsString(node.get("params")));
+            }
+            if (node.has("returnType")) {
+                problem.setReturnType(node.get("returnType").asText());
+            }
+
             Problem saved = problemRepository.save(problem);
 
             // Upload test case files to S3

@@ -54,6 +54,7 @@ public class Problem {
     private String functionName;
 
     @Column(name = "params", columnDefinition = "JSONB")
+    @org.hibernate.annotations.JdbcTypeCode(org.hibernate.type.SqlTypes.JSON)
     private String params;
 
     @Column(name = "return_type", length = 50)
