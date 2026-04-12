@@ -1,9 +1,6 @@
 package com.deadlock.service;
 
-import com.deadlock.model.Language;
-import com.deadlock.model.Problem;
-import com.deadlock.model.Submission;
-import com.deadlock.model.User;
+import com.deadlock.model.*;
 import com.deadlock.repository.SubmissionRepository;
 import com.deadlock.sandbox.SandboxResult;
 import com.deadlock.sandbox.SandboxService;
@@ -87,8 +84,8 @@ class JudgeServiceTest {
 
         judgeService.judge(submission);
 
-        assertThat(submission.getVerdict().name()).isEqualTo("ACCEPTED");
-        assertThat(submission.getStatus().name()).isEqualTo("COMPLETED");
+        assertThat(submission.getVerdict()).isEqualTo(Verdict.ACCEPTED);
+        assertThat(submission.getStatus()).isEqualTo(SubmissionStatus.COMPLETED);
     }
 
     @Test
@@ -106,7 +103,7 @@ class JudgeServiceTest {
 
         judgeService.judge(submission);
 
-        assertThat(submission.getVerdict().name()).isEqualTo("WRONG_ANSWER");
+        assertThat(submission.getVerdict()).isEqualTo(Verdict.WRONG_ANSWER);
         assertThat(submission.getFailedTestCase()).isEqualTo(1);
     }
 
@@ -124,7 +121,7 @@ class JudgeServiceTest {
 
         judgeService.judge(submission);
 
-        assertThat(submission.getVerdict().name()).isEqualTo("TLE");
+        assertThat(submission.getVerdict()).isEqualTo(Verdict.TLE);
     }
 
     @Test
@@ -139,7 +136,7 @@ class JudgeServiceTest {
 
         judgeService.judge(submission);
 
-        assertThat(submission.getVerdict().name()).isEqualTo("MLE");
+        assertThat(submission.getVerdict()).isEqualTo(Verdict.MLE);
     }
 
     @Test
@@ -154,7 +151,7 @@ class JudgeServiceTest {
 
         judgeService.judge(submission);
 
-        assertThat(submission.getVerdict().name()).isEqualTo("COMPILE_ERROR");
+        assertThat(submission.getVerdict()).isEqualTo(Verdict.COMPILE_ERROR);
     }
 
     @Test
@@ -171,7 +168,7 @@ class JudgeServiceTest {
 
         judgeService.judge(submission);
 
-        assertThat(submission.getVerdict().name()).isEqualTo("RUNTIME_ERROR");
+        assertThat(submission.getVerdict()).isEqualTo(Verdict.RUNTIME_ERROR);
     }
 
     @Test

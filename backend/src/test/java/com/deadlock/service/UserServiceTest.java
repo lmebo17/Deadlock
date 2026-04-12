@@ -1,5 +1,7 @@
 package com.deadlock.service;
 
+import com.deadlock.exception.InvalidInputException;
+import com.deadlock.exception.UsernameAlreadyTakenException;
 import com.deadlock.model.User;
 import com.deadlock.model.UserProvider;
 import com.deadlock.repository.UserProviderRepository;
@@ -107,7 +109,7 @@ class UserServiceTest {
         when(userRepository.existsByUsername("taken")).thenReturn(true);
 
         assertThatThrownBy(() -> userService.setUsername(1L, "taken"))
-                .isInstanceOf(IllegalArgumentException.class)
+                .isInstanceOf(UsernameAlreadyTakenException.class)
                 .hasMessageContaining("taken");
     }
 
@@ -117,7 +119,7 @@ class UserServiceTest {
         when(userRepository.findById(1L)).thenReturn(Optional.of(user));
 
         assertThatThrownBy(() -> userService.setUsername(1L, "ab"))
-                .isInstanceOf(IllegalArgumentException.class);
+                .isInstanceOf(com.deadlock.exception.InvalidInputException.class);
     }
 
     @Test

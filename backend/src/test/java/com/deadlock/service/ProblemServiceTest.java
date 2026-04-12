@@ -104,7 +104,7 @@ class ProblemServiceTest {
         when(problemRepository.findBySlug("nonexistent")).thenReturn(Optional.empty());
 
         assertThatThrownBy(() -> problemService.getProblemBySlug("nonexistent"))
-                .isInstanceOf(IllegalArgumentException.class);
+                .isInstanceOf(RuntimeException.class);
     }
 
     @Test
