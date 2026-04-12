@@ -12,6 +12,8 @@ import org.springframework.stereotype.Service;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
@@ -38,35 +40,41 @@ public class DockerSandboxService implements SandboxService {
     }
 
     @Override
-    public SandboxResult execute(String code, String language, String input,
-                                  int timeLimitMs, int memoryLimitMb) {
+    public SandboxResult executeAll(String code, String language, List<String> testInputs,
+                                     int timeLimitMs, int memoryLimitMb) {
         String image = LANGUAGE_IMAGES.get(language.toUpperCase());
         String ext = LANGUAGE_EXTENSIONS.get(language.toUpperCase());
         if (image == null || ext == null) {
-            return new SandboxResult(1, "", "Unsupported language: " + language, 0, false, false);
+            return new SandboxResult(false, "Unsupported language: " + language,
+                    List.of(), 0, false);
         }
 
         Path tempDir = null;
         String containerId = null;
         try {
+            // Set up temp directory
             tempDir = Files.createTempDirectory("deadlock-sandbox-");
-            Files.writeString(tempDir.resolve("solution." + ext), code);
-            Files.writeString(tempDir.resolve("input.txt"), input);
-            Files.writeString(tempDir.resolve("output.txt"), "");
-            Files.writeString(tempDir.resolve("compile_error.txt"), "");
-            Files.writeString(tempDir.resolve("runtime_error.txt"), "");
+            Path testsDir = tempDir.resolve("tests");
+            Path resultsDir = tempDir.resolve("results");
+            Files.createDirectories(testsDir);
+            Files.createDirectories(resultsDir);
 
-            // Make files accessible by sandbox user (uid 1000)
-            tempDir.toFile().setReadable(true, false);
-            tempDir.toFile().setWritable(true, false);
-            tempDir.toFile().setExecutable(true, false);
-            for (var f : tempDir.toFile().listFiles()) {
-                f.setReadable(true, false);
-                f.setWritable(true, false);
+            // Write code file
+            Files.writeString(tempDir.resolve("solution." + ext), code);
+
+            // Write all test inputs
+            for (int i = 0; i < testInputs.size(); i++) {
+                String idx = String.format("%02d", i + 1);
+                Files.writeString(testsDir.resolve(idx + "-input.txt"), testInputs.get(i));
             }
 
-            int timeLimitSec = Math.max(1, timeLimitMs / 1000);
+            // Make everything accessible by sandbox user (uid 1000)
+            setPermissionsRecursive(tempDir);
 
+            int timeLimitSec = Math.max(1, timeLimitMs / 1000);
+            int overallTimeoutSec = Math.min(timeLimitSec * testInputs.size() + 10, 120);
+
+            // Create container
             HostConfig hostConfig = HostConfig.newHostConfig()
                     .withMemory((long) memoryLimitMb * 1024 * 1024)
                     .withMemorySwap((long) memoryLimitMb * 1024 * 1024)
@@ -84,53 +92,109 @@ public class DockerSandboxService implements SandboxService {
 
             containerId = container.getId();
 
+            // Run
             long startTime = System.currentTimeMillis();
             dockerClient.startContainerCmd(containerId).exec();
 
-            int overallTimeoutSec = Math.min(timeLimitSec + 5, 120);
             boolean finished = dockerClient.waitContainerCmd(containerId)
                     .exec(new WaitContainerResultCallback())
                     .awaitCompletion(overallTimeoutSec, TimeUnit.SECONDS);
 
-            long executionTime = System.currentTimeMillis() - startTime;
+            long totalTime = System.currentTimeMillis() - startTime;
 
             if (!finished) {
                 try { dockerClient.killContainerCmd(containerId).exec(); } catch (Exception ignored) {}
-                return new SandboxResult(124, "", "Time limit exceeded", executionTime, true, false);
             }
 
+            // Check OOM
             var inspectResponse = dockerClient.inspectContainerCmd(containerId).exec();
             Boolean oomKilled = inspectResponse.getState().getOOMKilled();
-            int exitCode = inspectResponse.getState().getExitCode();
-
             if (Boolean.TRUE.equals(oomKilled)) {
-                return new SandboxResult(137, "", "Memory limit exceeded", executionTime, false, true);
+                return new SandboxResult(false, null, List.of(), totalTime, true);
             }
 
-            String stdout = Files.readString(tempDir.resolve("output.txt"), StandardCharsets.UTF_8);
-            String stderr = "";
-            if (exitCode == 2) {
-                stderr = Files.readString(tempDir.resolve("compile_error.txt"), StandardCharsets.UTF_8);
-            } else if (exitCode != 0) {
-                stderr = Files.readString(tempDir.resolve("runtime_error.txt"), StandardCharsets.UTF_8);
+            // Check compile error
+            Path compileErrorFile = resultsDir.resolve("compile_error.txt");
+            Path statusFile = resultsDir.resolve("status.txt");
+            if (Files.exists(statusFile)) {
+                String status = Files.readString(statusFile, StandardCharsets.UTF_8).trim();
+                if ("COMPILE_ERROR".equals(status)) {
+                    String compileErr = Files.exists(compileErrorFile)
+                            ? Files.readString(compileErrorFile, StandardCharsets.UTF_8) : "";
+                    return new SandboxResult(true, compileErr, List.of(), totalTime, false);
+                }
             }
 
-            return new SandboxResult(exitCode, stdout, stderr, executionTime, false, false);
+            // Read test results
+            List<SandboxResult.TestCaseResult> results = new ArrayList<>();
+            for (int i = 0; i < testInputs.size(); i++) {
+                String idx = String.format("%02d", i + 1);
+                Path outputFile = resultsDir.resolve(idx + "-output.txt");
+                Path exitFile = resultsDir.resolve(idx + "-exit.txt");
+                Path errorFile = resultsDir.resolve(idx + "-error.txt");
+
+                String stdout = Files.exists(outputFile)
+                        ? Files.readString(outputFile, StandardCharsets.UTF_8) : "";
+                String stderr = Files.exists(errorFile)
+                        ? Files.readString(errorFile, StandardCharsets.UTF_8) : "";
+                int exitCode = 0;
+                boolean timedOut = false;
+
+                if (Files.exists(exitFile)) {
+                    exitCode = Integer.parseInt(Files.readString(exitFile, StandardCharsets.UTF_8).trim());
+                    timedOut = (exitCode == 124);
+                } else {
+                    // No exit file means container died before reaching this test (OOM/TLE on earlier test)
+                    break;
+                }
+
+                results.add(new SandboxResult.TestCaseResult(i + 1, exitCode, stdout, stderr, timedOut));
+            }
+
+            return new SandboxResult(false, null, results, totalTime, false);
 
         } catch (Exception e) {
             log.error("Sandbox execution failed", e);
-            return new SandboxResult(1, "", "Sandbox error: " + e.getMessage(), 0, false, false);
+            return new SandboxResult(false, "Sandbox error: " + e.getMessage(),
+                    List.of(), 0, false);
         } finally {
             if (containerId != null) {
                 try { dockerClient.removeContainerCmd(containerId).withForce(true).exec(); }
                 catch (Exception ignored) {}
             }
             if (tempDir != null) {
-                try {
-                    for (var f : tempDir.toFile().listFiles()) f.delete();
-                    tempDir.toFile().delete();
-                } catch (Exception ignored) {}
+                deleteRecursive(tempDir);
             }
         }
+    }
+
+    private void setPermissionsRecursive(Path dir) {
+        dir.toFile().setReadable(true, false);
+        dir.toFile().setWritable(true, false);
+        dir.toFile().setExecutable(true, false);
+        var files = dir.toFile().listFiles();
+        if (files != null) {
+            for (var f : files) {
+                f.setReadable(true, false);
+                f.setWritable(true, false);
+                if (f.isDirectory()) {
+                    f.setExecutable(true, false);
+                    setPermissionsRecursive(f.toPath());
+                }
+            }
+        }
+    }
+
+    private void deleteRecursive(Path dir) {
+        try {
+            var files = dir.toFile().listFiles();
+            if (files != null) {
+                for (var f : files) {
+                    if (f.isDirectory()) deleteRecursive(f.toPath());
+                    else f.delete();
+                }
+            }
+            dir.toFile().delete();
+        } catch (Exception ignored) {}
     }
 }

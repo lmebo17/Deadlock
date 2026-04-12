@@ -12,6 +12,8 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import java.util.List;
+
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
@@ -35,8 +37,7 @@ class JudgeServiceTest {
         s.setLanguage("PYTHON");
         s.setCode("print(42)");
         s.setStatus("PENDING");
-        User user = new User("test@test.com", "Test", "");
-        s.setUser(user);
+        s.setUser(new User("test@test.com", "Test", ""));
         s.setProblem(problem);
         return s;
     }
@@ -61,18 +62,25 @@ class JudgeServiceTest {
         return p;
     }
 
+    private void mockTestFiles(int count) {
+        for (int i = 1; i <= count; i++) {
+            String idx = String.format("%02d", i);
+            when(storageService.downloadFile("1/tests/" + idx + "-input.txt")).thenReturn("5\n".getBytes());
+            when(storageService.downloadFile("1/tests/" + idx + "-output.txt")).thenReturn("42\n".getBytes());
+        }
+    }
+
     @Test
     void acceptedWhenAllTestsPass() {
         Problem problem = createProblem(2);
         Submission submission = createSubmission(problem);
+        mockTestFiles(2);
 
-        when(storageService.downloadFile("1/tests/01-input.txt")).thenReturn("5\n".getBytes());
-        when(storageService.downloadFile("1/tests/01-output.txt")).thenReturn("42\n".getBytes());
-        when(storageService.downloadFile("1/tests/02-input.txt")).thenReturn("10\n".getBytes());
-        when(storageService.downloadFile("1/tests/02-output.txt")).thenReturn("42\n".getBytes());
-
-        when(sandboxService.execute(anyString(), anyString(), anyString(), anyInt(), anyInt()))
-                .thenReturn(new SandboxResult(0, "42\n", "", 100, false, false));
+        when(sandboxService.executeAll(anyString(), anyString(), anyList(), anyInt(), anyInt()))
+                .thenReturn(new SandboxResult(false, null, List.of(
+                        new SandboxResult.TestCaseResult(1, 0, "42\n", "", false),
+                        new SandboxResult.TestCaseResult(2, 0, "42\n", "", false)
+                ), 200, false));
         when(submissionRepository.save(any())).thenAnswer(i -> i.getArgument(0));
 
         judgeService.judge(submission);
@@ -85,12 +93,13 @@ class JudgeServiceTest {
     void wrongAnswerWhenOutputMismatch() {
         Problem problem = createProblem(2);
         Submission submission = createSubmission(problem);
+        mockTestFiles(2);
 
-        when(storageService.downloadFile("1/tests/01-input.txt")).thenReturn("5\n".getBytes());
-        when(storageService.downloadFile("1/tests/01-output.txt")).thenReturn("42\n".getBytes());
-
-        when(sandboxService.execute(anyString(), anyString(), anyString(), anyInt(), anyInt()))
-                .thenReturn(new SandboxResult(0, "wrong\n", "", 100, false, false));
+        when(sandboxService.executeAll(anyString(), anyString(), anyList(), anyInt(), anyInt()))
+                .thenReturn(new SandboxResult(false, null, List.of(
+                        new SandboxResult.TestCaseResult(1, 0, "wrong\n", "", false),
+                        new SandboxResult.TestCaseResult(2, 0, "42\n", "", false)
+                ), 200, false));
         when(submissionRepository.save(any())).thenAnswer(i -> i.getArgument(0));
 
         judgeService.judge(submission);
@@ -103,12 +112,12 @@ class JudgeServiceTest {
     void tleWhenTimedOut() {
         Problem problem = createProblem(1);
         Submission submission = createSubmission(problem);
+        mockTestFiles(1);
 
-        when(storageService.downloadFile("1/tests/01-input.txt")).thenReturn("5\n".getBytes());
-        when(storageService.downloadFile("1/tests/01-output.txt")).thenReturn("42\n".getBytes());
-
-        when(sandboxService.execute(anyString(), anyString(), anyString(), anyInt(), anyInt()))
-                .thenReturn(new SandboxResult(124, "", "", 5000, true, false));
+        when(sandboxService.executeAll(anyString(), anyString(), anyList(), anyInt(), anyInt()))
+                .thenReturn(new SandboxResult(false, null, List.of(
+                        new SandboxResult.TestCaseResult(1, 124, "", "", true)
+                ), 5000, false));
         when(submissionRepository.save(any())).thenAnswer(i -> i.getArgument(0));
 
         judgeService.judge(submission);
@@ -120,12 +129,10 @@ class JudgeServiceTest {
     void mleWhenOomKilled() {
         Problem problem = createProblem(1);
         Submission submission = createSubmission(problem);
+        mockTestFiles(1);
 
-        when(storageService.downloadFile("1/tests/01-input.txt")).thenReturn("5\n".getBytes());
-        when(storageService.downloadFile("1/tests/01-output.txt")).thenReturn("42\n".getBytes());
-
-        when(sandboxService.execute(anyString(), anyString(), anyString(), anyInt(), anyInt()))
-                .thenReturn(new SandboxResult(137, "", "", 1000, false, true));
+        when(sandboxService.executeAll(anyString(), anyString(), anyList(), anyInt(), anyInt()))
+                .thenReturn(new SandboxResult(false, null, List.of(), 1000, true));
         when(submissionRepository.save(any())).thenAnswer(i -> i.getArgument(0));
 
         judgeService.judge(submission);
@@ -134,15 +141,13 @@ class JudgeServiceTest {
     }
 
     @Test
-    void compileErrorWhenExitCode2() {
+    void compileError() {
         Problem problem = createProblem(1);
         Submission submission = createSubmission(problem);
+        mockTestFiles(1);
 
-        when(storageService.downloadFile("1/tests/01-input.txt")).thenReturn("5\n".getBytes());
-        when(storageService.downloadFile("1/tests/01-output.txt")).thenReturn("42\n".getBytes());
-
-        when(sandboxService.execute(anyString(), anyString(), anyString(), anyInt(), anyInt()))
-                .thenReturn(new SandboxResult(2, "", "error: ';' expected", 500, false, false));
+        when(sandboxService.executeAll(anyString(), anyString(), anyList(), anyInt(), anyInt()))
+                .thenReturn(new SandboxResult(true, "error: ';' expected", List.of(), 500, false));
         when(submissionRepository.save(any())).thenAnswer(i -> i.getArgument(0));
 
         judgeService.judge(submission);
@@ -154,12 +159,12 @@ class JudgeServiceTest {
     void runtimeErrorWhenNonZeroExit() {
         Problem problem = createProblem(1);
         Submission submission = createSubmission(problem);
+        mockTestFiles(1);
 
-        when(storageService.downloadFile("1/tests/01-input.txt")).thenReturn("5\n".getBytes());
-        when(storageService.downloadFile("1/tests/01-output.txt")).thenReturn("42\n".getBytes());
-
-        when(sandboxService.execute(anyString(), anyString(), anyString(), anyInt(), anyInt()))
-                .thenReturn(new SandboxResult(1, "", "NullPointerException", 300, false, false));
+        when(sandboxService.executeAll(anyString(), anyString(), anyList(), anyInt(), anyInt()))
+                .thenReturn(new SandboxResult(false, null, List.of(
+                        new SandboxResult.TestCaseResult(1, 1, "", "NullPointerException", false)
+                ), 300, false));
         when(submissionRepository.save(any())).thenAnswer(i -> i.getArgument(0));
 
         judgeService.judge(submission);
@@ -175,8 +180,10 @@ class JudgeServiceTest {
         when(storageService.downloadFile("1/tests/01-input.txt")).thenReturn("5\n".getBytes());
         when(storageService.downloadFile("1/tests/01-output.txt")).thenReturn("42  \n\n".getBytes());
 
-        when(sandboxService.execute(anyString(), anyString(), anyString(), anyInt(), anyInt()))
-                .thenReturn(new SandboxResult(0, "42\n", "", 100, false, false));
+        when(sandboxService.executeAll(anyString(), anyString(), anyList(), anyInt(), anyInt()))
+                .thenReturn(new SandboxResult(false, null, List.of(
+                        new SandboxResult.TestCaseResult(1, 0, "42\n", "", false)
+                ), 100, false));
         when(submissionRepository.save(any())).thenAnswer(i -> i.getArgument(0));
 
         judgeService.judge(submission);

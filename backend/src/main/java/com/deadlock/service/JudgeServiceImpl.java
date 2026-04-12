@@ -10,7 +10,9 @@ import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
 import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -35,47 +37,68 @@ public class JudgeServiceImpl implements JudgeService {
         submissionRepository.save(submission);
 
         Problem problem = submission.getProblem();
-        long maxExecutionTime = 0;
 
         try {
+            // Fetch all test inputs and expected outputs from S3
+            List<String> testInputs = new ArrayList<>();
+            List<String> expectedOutputs = new ArrayList<>();
+
             for (int i = 1; i <= problem.getTestCaseCount(); i++) {
                 String idx = String.format("%02d", i);
                 String prefix = problem.getId() + "/tests/";
-                String input = new String(storageService.downloadFile(prefix + idx + "-input.txt"), StandardCharsets.UTF_8);
-                String expectedOutput = new String(storageService.downloadFile(prefix + idx + "-output.txt"), StandardCharsets.UTF_8);
+                testInputs.add(new String(
+                        storageService.downloadFile(prefix + idx + "-input.txt"), StandardCharsets.UTF_8));
+                expectedOutputs.add(new String(
+                        storageService.downloadFile(prefix + idx + "-output.txt"), StandardCharsets.UTF_8));
+            }
 
-                SandboxResult result = sandboxService.execute(
-                        submission.getCode(), submission.getLanguage(), input,
-                        problem.getTimeLimitMs(), problem.getMemoryLimitMb());
+            // Execute all tests in one container
+            SandboxResult result = sandboxService.executeAll(
+                    submission.getCode(), submission.getLanguage(), testInputs,
+                    problem.getTimeLimitMs(), problem.getMemoryLimitMb());
 
-                maxExecutionTime = Math.max(maxExecutionTime, result.getExecutionTimeMs());
+            // Handle compile error
+            if (result.isCompileError()) {
+                finishSubmission(submission, "COMPILE_ERROR", 1, result.getTotalExecutionTimeMs());
+                return;
+            }
 
-                if (result.isTimedOut()) {
-                    finishSubmission(submission, "TLE", i, maxExecutionTime);
+            // Handle OOM
+            if (result.isOomKilled()) {
+                finishSubmission(submission, "MLE", null, result.getTotalExecutionTimeMs());
+                return;
+            }
+
+            // Check each test result
+            for (SandboxResult.TestCaseResult tcResult : result.getTestResults()) {
+                int idx = tcResult.getTestIndex();
+
+                if (tcResult.isTimedOut()) {
+                    finishSubmission(submission, "TLE", idx, result.getTotalExecutionTimeMs());
                     return;
                 }
-                if (result.isOomKilled()) {
-                    finishSubmission(submission, "MLE", i, maxExecutionTime);
+                if (tcResult.getExitCode() != 0) {
+                    finishSubmission(submission, "RUNTIME_ERROR", idx, result.getTotalExecutionTimeMs());
                     return;
                 }
-                if (result.getExitCode() == 2) {
-                    finishSubmission(submission, "COMPILE_ERROR", i, maxExecutionTime);
-                    return;
-                }
-                if (result.getExitCode() != 0) {
-                    finishSubmission(submission, "RUNTIME_ERROR", i, maxExecutionTime);
-                    return;
-                }
-                if (!normalizeOutput(result.getStdout()).equals(normalizeOutput(expectedOutput))) {
-                    finishSubmission(submission, "WRONG_ANSWER", i, maxExecutionTime);
+                if (!normalizeOutput(tcResult.getStdout()).equals(
+                        normalizeOutput(expectedOutputs.get(idx - 1)))) {
+                    finishSubmission(submission, "WRONG_ANSWER", idx, result.getTotalExecutionTimeMs());
                     return;
                 }
             }
 
-            finishSubmission(submission, "ACCEPTED", null, maxExecutionTime);
+            // If we got fewer results than test cases, something went wrong
+            if (result.getTestResults().size() < problem.getTestCaseCount()) {
+                finishSubmission(submission, "RUNTIME_ERROR", result.getTestResults().size() + 1,
+                        result.getTotalExecutionTimeMs());
+                return;
+            }
+
+            finishSubmission(submission, "ACCEPTED", null, result.getTotalExecutionTimeMs());
         } catch (Exception e) {
             log.error("Judge failed for submission {}", submission.getId(), e);
-            finishSubmission(submission, "RUNTIME_ERROR", null, maxExecutionTime);
+            finishSubmission(submission, "RUNTIME_ERROR", null, 0);
         }
     }
 
@@ -85,6 +108,7 @@ public class JudgeServiceImpl implements JudgeService {
         submission.setExecutionTimeMs((int) executionTimeMs);
         submission.setStatus("COMPLETED");
         submissionRepository.save(submission);
+        log.info("Submission {} verdict: {} ({}ms)", submission.getId(), verdict, executionTimeMs);
     }
 
     private String normalizeOutput(String output) {
