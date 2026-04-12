@@ -1,8 +1,7 @@
 package com.deadlock.service;
 
 import jakarta.annotation.PostConstruct;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import software.amazon.awssdk.core.sync.RequestBody;
@@ -11,10 +10,9 @@ import software.amazon.awssdk.services.s3.model.*;
 
 import java.util.List;
 
+@Slf4j
 @Service
 public class S3StorageService implements StorageService {
-
-    private static final Logger log = LoggerFactory.getLogger(S3StorageService.class);
 
     private final S3Client s3Client;
     private final String bucket;

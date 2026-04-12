@@ -8,6 +8,7 @@ import com.deadlock.model.Verdict;
 import com.deadlock.repository.SubmissionRepository;
 import com.deadlock.sandbox.SandboxResult;
 import com.deadlock.sandbox.SandboxService;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.scheduling.annotation.Async;
@@ -21,6 +22,7 @@ import java.util.stream.Collectors;
 
 @Slf4j
 @Service
+@RequiredArgsConstructor
 public class JudgeServiceImpl implements JudgeService {
 
     private final SandboxService sandboxService;
@@ -28,17 +30,6 @@ public class JudgeServiceImpl implements JudgeService {
     private final SubmissionRepository submissionRepository;
     private final ApplicationEventPublisher eventPublisher;
     private final WrapperCodeService wrapperCodeService;
-
-    public JudgeServiceImpl(SandboxService sandboxService, StorageService storageService,
-                            SubmissionRepository submissionRepository,
-                            ApplicationEventPublisher eventPublisher,
-                            WrapperCodeService wrapperCodeService) {
-        this.sandboxService = sandboxService;
-        this.storageService = storageService;
-        this.submissionRepository = submissionRepository;
-        this.eventPublisher = eventPublisher;
-        this.wrapperCodeService = wrapperCodeService;
-    }
 
     @Override
     @Async("judgeExecutor")
@@ -75,45 +66,45 @@ public class JudgeServiceImpl implements JudgeService {
                     problem.getTimeLimitMs(), problem.getMemoryLimitMb());
 
             // Handle compile error
-            if (result.isCompileError()) {
-                finishSubmission(submission, Verdict.COMPILE_ERROR, 1, result.getTotalExecutionTimeMs());
+            if (result.compileError()) {
+                finishSubmission(submission, Verdict.COMPILE_ERROR, 1, result.totalExecutionTimeMs());
                 return;
             }
 
             // Handle OOM
-            if (result.isOomKilled()) {
-                finishSubmission(submission, Verdict.MLE, null, result.getTotalExecutionTimeMs());
+            if (result.oomKilled()) {
+                finishSubmission(submission, Verdict.MLE, null, result.totalExecutionTimeMs());
                 return;
             }
 
             // Check each test result
-            for (SandboxResult.TestCaseResult tcResult : result.getTestResults()) {
-                int idx = tcResult.getTestIndex();
+            for (SandboxResult.TestCaseResult tcResult : result.testResults()) {
+                int idx = tcResult.testIndex();
 
-                if (tcResult.isTimedOut()) {
-                    finishSubmission(submission, Verdict.TLE, idx, result.getTotalExecutionTimeMs());
+                if (tcResult.timedOut()) {
+                    finishSubmission(submission, Verdict.TLE, idx, result.totalExecutionTimeMs());
                     return;
                 }
-                if (tcResult.getExitCode() != 0) {
-                    finishSubmission(submission, Verdict.RUNTIME_ERROR, idx, result.getTotalExecutionTimeMs());
+                if (tcResult.exitCode() != 0) {
+                    finishSubmission(submission, Verdict.RUNTIME_ERROR, idx, result.totalExecutionTimeMs());
                     return;
                 }
-                if (!normalizeOutput(tcResult.getStdout()).equals(
+                if (!normalizeOutput(tcResult.stdout()).equals(
                         normalizeOutput(expectedOutputs.get(idx - 1)))) {
-                    finishSubmission(submission, Verdict.WRONG_ANSWER, idx, result.getTotalExecutionTimeMs());
+                    finishSubmission(submission, Verdict.WRONG_ANSWER, idx, result.totalExecutionTimeMs());
                     return;
                 }
             }
 
             // If we got fewer results than test cases, something went wrong
-            if (result.getTestResults().size() < problem.getTestCaseCount()) {
-                finishSubmission(submission, Verdict.RUNTIME_ERROR, result.getTestResults().size() + 1,
-                        result.getTotalExecutionTimeMs());
+            if (result.testResults().size() < problem.getTestCaseCount()) {
+                finishSubmission(submission, Verdict.RUNTIME_ERROR, result.testResults().size() + 1,
+                        result.totalExecutionTimeMs());
                 return;
             }
 
-            finishSubmission(submission, Verdict.ACCEPTED, null, result.getTotalExecutionTimeMs());
-        } catch (Exception e) {
+            finishSubmission(submission, Verdict.ACCEPTED, null, result.totalExecutionTimeMs());
+        } catch (RuntimeException e) {
             log.error("Judge failed for submission {}", submission.getId(), e);
             finishSubmission(submission, Verdict.RUNTIME_ERROR, null, 0);
         }

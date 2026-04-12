@@ -7,6 +7,7 @@ import com.github.dockerjava.api.command.WaitContainerResultCallback;
 import com.github.dockerjava.api.model.Bind;
 import com.github.dockerjava.api.model.Capability;
 import com.github.dockerjava.api.model.HostConfig;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
@@ -19,13 +20,10 @@ import java.util.concurrent.TimeUnit;
 
 @Slf4j
 @Service
+@RequiredArgsConstructor
 public class DockerSandboxService implements SandboxService {
 
     private final DockerClient dockerClient;
-
-    public DockerSandboxService(DockerClient dockerClient) {
-        this.dockerClient = dockerClient;
-    }
 
     @Override
     public SandboxResult executeAll(String code, String language, List<String> testInputs,
@@ -98,7 +96,8 @@ public class DockerSandboxService implements SandboxService {
             long totalTime = System.currentTimeMillis() - startTime;
 
             if (!finished) {
-                try { dockerClient.killContainerCmd(containerId).exec(); } catch (Exception ignored) {}
+                try { dockerClient.killContainerCmd(containerId).exec(); }
+                catch (Exception e) { log.warn("Failed to kill timed-out container {}", containerId, e); }
             }
 
             // Check OOM
@@ -155,7 +154,7 @@ public class DockerSandboxService implements SandboxService {
         } finally {
             if (containerId != null) {
                 try { dockerClient.removeContainerCmd(containerId).withForce(true).exec(); }
-                catch (Exception ignored) {}
+                catch (Exception e) { log.warn("Failed to remove container {}", containerId, e); }
             }
             if (tempDir != null) {
                 deleteRecursive(tempDir);
@@ -190,6 +189,6 @@ public class DockerSandboxService implements SandboxService {
                 }
             }
             dir.toFile().delete();
-        } catch (Exception ignored) {}
+        } catch (Exception e) { log.warn("Failed to clean up temp directory {}", dir, e); }
     }
 }

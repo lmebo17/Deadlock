@@ -10,6 +10,7 @@ import com.deadlock.model.User;
 import com.deadlock.repository.ProblemRepository;
 import com.deadlock.repository.SubmissionRepository;
 import com.deadlock.repository.UserRepository;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -20,22 +21,13 @@ import java.util.List;
 
 @Slf4j
 @Service
+@RequiredArgsConstructor
 public class SubmissionServiceImpl implements SubmissionService {
 
     private final SubmissionRepository submissionRepository;
     private final ProblemRepository problemRepository;
     private final UserRepository userRepository;
     private final JudgeService judgeService;
-
-    public SubmissionServiceImpl(SubmissionRepository submissionRepository,
-                                  ProblemRepository problemRepository,
-                                  UserRepository userRepository,
-                                  JudgeService judgeService) {
-        this.submissionRepository = submissionRepository;
-        this.problemRepository = problemRepository;
-        this.userRepository = userRepository;
-        this.judgeService = judgeService;
-    }
 
     @Override
     @Transactional

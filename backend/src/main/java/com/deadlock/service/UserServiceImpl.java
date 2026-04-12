@@ -7,23 +7,20 @@ import com.deadlock.model.User;
 import com.deadlock.model.UserProvider;
 import com.deadlock.repository.UserProviderRepository;
 import com.deadlock.repository.UserRepository;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.regex.Pattern;
 
 @Service
+@RequiredArgsConstructor
 public class UserServiceImpl implements UserService {
 
     private static final Pattern USERNAME_PATTERN = Pattern.compile("^[a-zA-Z0-9_]{3,20}$");
 
     private final UserRepository userRepository;
     private final UserProviderRepository userProviderRepository;
-
-    public UserServiceImpl(UserRepository userRepository, UserProviderRepository userProviderRepository) {
-        this.userRepository = userRepository;
-        this.userProviderRepository = userProviderRepository;
-    }
 
     @Override
     @Transactional

@@ -7,6 +7,7 @@ import com.deadlock.service.SubmissionService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -17,13 +18,10 @@ import java.util.Map;
 
 @RestController
 @Tag(name = "Submissions", description = "Code submission and judging")
+@RequiredArgsConstructor
 public class SubmissionController {
 
     private final SubmissionService submissionService;
-
-    public SubmissionController(SubmissionService submissionService) {
-        this.submissionService = submissionService;
-    }
 
     @PostMapping("/api/problems/{slug}/submit")
     @Operation(summary = "Submit code", description = "Submit code for judging, returns submission ID")

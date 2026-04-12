@@ -4,6 +4,7 @@ import com.deadlock.dto.*;
 import com.deadlock.exception.ResourceNotFoundException;
 import com.deadlock.model.Problem;
 import com.deadlock.repository.ProblemRepository;
+import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -14,15 +15,11 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Service
+@RequiredArgsConstructor
 public class ProblemServiceImpl implements ProblemService {
 
     private final ProblemRepository problemRepository;
     private final StorageService storageService;
-
-    public ProblemServiceImpl(ProblemRepository problemRepository, StorageService storageService) {
-        this.problemRepository = problemRepository;
-        this.storageService = storageService;
-    }
 
     @Override
     public Page<ProblemResponse> listProblems(int minRating, int maxRating, String search,

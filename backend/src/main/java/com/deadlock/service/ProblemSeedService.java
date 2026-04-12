@@ -4,8 +4,8 @@ import com.deadlock.model.Problem;
 import com.deadlock.repository.ProblemRepository;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.event.EventListener;
 import org.springframework.core.io.ClassPathResource;
@@ -15,22 +15,14 @@ import org.springframework.stereotype.Service;
 
 import java.io.IOException;
 
+@Slf4j
 @Service
+@RequiredArgsConstructor
 public class ProblemSeedService {
-
-    private static final Logger log = LoggerFactory.getLogger(ProblemSeedService.class);
 
     private final ProblemRepository problemRepository;
     private final StorageService storageService;
     private final ObjectMapper objectMapper;
-
-    public ProblemSeedService(ProblemRepository problemRepository,
-                               StorageService storageService,
-                               ObjectMapper objectMapper) {
-        this.problemRepository = problemRepository;
-        this.storageService = storageService;
-        this.objectMapper = objectMapper;
-    }
 
     @EventListener(ApplicationReadyEvent.class)
     public void seedProblemsIfEmpty() {
@@ -41,7 +33,7 @@ public class ProblemSeedService {
 
         try {
             seedFromClasspath();
-        } catch (Exception e) {
+        } catch (IOException e) {
             log.error("Failed to seed problems", e);
         }
     }
@@ -106,7 +98,7 @@ public class ProblemSeedService {
                     testIndex++;
                 }
             } catch (IOException e) {
-                log.warn("No test files found for problem {}", slug);
+                log.warn("No test files found for problem {}: {}", slug, e.getMessage());
             }
 
             saved.setTestCaseCount(testIndex);
