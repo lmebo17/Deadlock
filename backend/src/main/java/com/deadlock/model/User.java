@@ -1,16 +1,22 @@
 package com.deadlock.model;
 
 import jakarta.persistence.*;
+import lombok.*;
+
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 
 @Entity
 @Table(name = "users")
+@Getter
+@Setter
+@NoArgsConstructor
 public class User {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Setter(AccessLevel.NONE)
     private Long id;
 
     @Column(unique = true, nullable = false)
@@ -35,36 +41,17 @@ public class User {
     private String role = "USER";
 
     @Column(name = "created_at", nullable = false, updatable = false)
+    @Setter(AccessLevel.NONE)
     private Instant createdAt = Instant.now();
 
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<UserProvider> providers = new ArrayList<>();
-
-    public User() {}
 
     public User(String email, String displayName, String avatarUrl) {
         this.email = email;
         this.displayName = displayName;
         this.avatarUrl = avatarUrl;
     }
-
-    public Long getId() { return id; }
-    public String getEmail() { return email; }
-    public void setEmail(String email) { this.email = email; }
-    public String getUsername() { return username; }
-    public void setUsername(String username) { this.username = username; }
-    public String getDisplayName() { return displayName; }
-    public void setDisplayName(String displayName) { this.displayName = displayName; }
-    public String getAvatarUrl() { return avatarUrl; }
-    public void setAvatarUrl(String avatarUrl) { this.avatarUrl = avatarUrl; }
-    public int getEloRating() { return eloRating; }
-    public void setEloRating(int eloRating) { this.eloRating = eloRating; }
-    public int getTokenVersion() { return tokenVersion; }
-    public void setTokenVersion(int tokenVersion) { this.tokenVersion = tokenVersion; }
-    public String getRole() { return role; }
-    public void setRole(String role) { this.role = role; }
-    public Instant getCreatedAt() { return createdAt; }
-    public List<UserProvider> getProviders() { return providers; }
 
     public void addProvider(UserProvider provider) {
         providers.add(provider);

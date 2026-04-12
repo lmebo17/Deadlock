@@ -1,14 +1,20 @@
 package com.deadlock.model;
 
 import jakarta.persistence.*;
+import lombok.*;
+
 import java.time.Instant;
 
 @Entity
 @Table(name = "problems")
+@Getter
+@Setter
+@NoArgsConstructor
 public class Problem {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Setter(AccessLevel.NONE)
     private Long id;
 
     @Column(nullable = false)
@@ -45,34 +51,8 @@ public class Problem {
     private int sampleCount = 0;
 
     @Column(name = "created_at", nullable = false, updatable = false)
+    @Setter(AccessLevel.NONE)
     private Instant createdAt = Instant.now();
-
-    public Problem() {}
-
-    public Long getId() { return id; }
-    public String getTitle() { return title; }
-    public void setTitle(String title) { this.title = title; }
-    public String getSlug() { return slug; }
-    public void setSlug(String slug) { this.slug = slug; }
-    public String getDescription() { return description; }
-    public void setDescription(String description) { this.description = description; }
-    public String getInputFormat() { return inputFormat; }
-    public void setInputFormat(String inputFormat) { this.inputFormat = inputFormat; }
-    public String getOutputFormat() { return outputFormat; }
-    public void setOutputFormat(String outputFormat) { this.outputFormat = outputFormat; }
-    public String getConstraints() { return constraints; }
-    public void setConstraints(String constraints) { this.constraints = constraints; }
-    public int getRating() { return rating; }
-    public void setRating(int rating) { this.rating = rating; }
-    public int getTimeLimitMs() { return timeLimitMs; }
-    public void setTimeLimitMs(int timeLimitMs) { this.timeLimitMs = timeLimitMs; }
-    public int getMemoryLimitMb() { return memoryLimitMb; }
-    public void setMemoryLimitMb(int memoryLimitMb) { this.memoryLimitMb = memoryLimitMb; }
-    public int getTestCaseCount() { return testCaseCount; }
-    public void setTestCaseCount(int testCaseCount) { this.testCaseCount = testCaseCount; }
-    public int getSampleCount() { return sampleCount; }
-    public void setSampleCount(int sampleCount) { this.sampleCount = sampleCount; }
-    public Instant getCreatedAt() { return createdAt; }
 
     public String getTierLabel() {
         if (rating <= 1000) return "Beginner";
