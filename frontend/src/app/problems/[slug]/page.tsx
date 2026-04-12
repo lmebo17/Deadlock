@@ -1,0 +1,108 @@
+"use client";
+
+import { useEffect, useState } from "react";
+import { useParams } from "next/navigation";
+import { Navbar } from "@/components/Navbar";
+import { MarkdownRenderer } from "@/components/MarkdownRenderer";
+import { DifficultyBadge } from "@/components/DifficultyBadge";
+import { getProblemBySlug, ProblemDetailResponse } from "@/lib/api";
+
+export default function ProblemDetailPage() {
+  const params = useParams();
+  const slug = params.slug as string;
+  const [problem, setProblem] = useState<ProblemDetailResponse | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    if (!slug) return;
+    getProblemBySlug(slug)
+      .then(setProblem)
+      .catch(() => setProblem(null))
+      .finally(() => setLoading(false));
+  }, [slug]);
+
+  if (loading) {
+    return (
+      <div className="min-h-screen">
+        <Navbar />
+        <div className="container mx-auto px-4 pt-24">
+          <div className="text-muted-foreground">Loading...</div>
+        </div>
+      </div>
+    );
+  }
+
+  if (!problem) {
+    return (
+      <div className="min-h-screen">
+        <Navbar />
+        <div className="container mx-auto px-4 pt-24">
+          <div className="text-destructive">Problem not found</div>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-h-screen">
+      <Navbar />
+      <div className="container mx-auto px-4 pt-24 pb-16 max-w-4xl">
+        {/* Header */}
+        <div className="mb-8">
+          <div className="flex items-center gap-4 mb-2">
+            <h1 className="text-3xl font-bold">{problem.title}</h1>
+            <DifficultyBadge rating={problem.rating} tierLabel={problem.tierLabel} />
+          </div>
+          <div className="flex gap-4 text-sm text-muted-foreground">
+            <span>Time limit: {problem.timeLimitMs}ms</span>
+            <span>Memory limit: {problem.memoryLimitMb}MB</span>
+          </div>
+        </div>
+
+        {/* Description */}
+        <section className="mb-8">
+          <MarkdownRenderer content={problem.description} />
+        </section>
+
+        {/* Input Format */}
+        <section className="mb-6">
+          <h2 className="text-xl font-semibold mb-2">Input</h2>
+          <MarkdownRenderer content={problem.inputFormat} />
+        </section>
+
+        {/* Output Format */}
+        <section className="mb-6">
+          <h2 className="text-xl font-semibold mb-2">Output</h2>
+          <MarkdownRenderer content={problem.outputFormat} />
+        </section>
+
+        {/* Constraints */}
+        <section className="mb-8">
+          <h2 className="text-xl font-semibold mb-2">Constraints</h2>
+          <MarkdownRenderer content={problem.constraints} />
+        </section>
+
+        {/* Sample Test Cases */}
+        <section>
+          <h2 className="text-xl font-semibold mb-4">Examples</h2>
+          {problem.sampleTestCases.map((tc) => (
+            <div key={tc.index} className="mb-6 grid grid-cols-2 gap-4">
+              <div>
+                <div className="mb-1 text-sm font-medium text-muted-foreground">Input</div>
+                <pre className="rounded-lg border border-border bg-secondary/50 p-4 font-mono text-sm overflow-x-auto">
+                  {tc.input}
+                </pre>
+              </div>
+              <div>
+                <div className="mb-1 text-sm font-medium text-muted-foreground">Output</div>
+                <pre className="rounded-lg border border-border bg-secondary/50 p-4 font-mono text-sm overflow-x-auto">
+                  {tc.output}
+                </pre>
+              </div>
+            </div>
+          ))}
+        </section>
+      </div>
+    </div>
+  );
+}
