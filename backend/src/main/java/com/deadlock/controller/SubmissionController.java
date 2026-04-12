@@ -26,10 +26,13 @@ public class SubmissionController {
 
     @PostMapping("/api/problems/{slug}/submit")
     @Operation(summary = "Submit code", description = "Submit code for judging, returns submission ID")
-    public ResponseEntity<Map<String, Long>> submit(
+    public ResponseEntity<?> submit(
             @PathVariable String slug,
             @Valid @RequestBody SubmitCodeRequest request,
             @AuthenticationPrincipal User user) {
+        if (user == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
         Long id = submissionService.submit(user.getId(), slug, request.language(), request.code());
         return ResponseEntity.status(HttpStatus.ACCEPTED).body(Map.of("id", id));
     }
