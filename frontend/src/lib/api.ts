@@ -60,3 +60,35 @@ export async function getProblems(
 export async function getProblemBySlug(slug: string): Promise<ProblemDetailResponse> {
   return apiFetch(`/api/problems/${slug}`);
 }
+
+export interface LeaderboardEntry {
+  rank: number;
+  id: number;
+  username: string;
+  avatarUrl: string;
+  eloRating: number;
+  tierLabel: string;
+}
+
+export interface UserProfile {
+  id: number;
+  username: string;
+  displayName: string;
+  avatarUrl: string;
+  eloRating: number;
+  tierLabel: string;
+  totalMatches: number;
+  wins: number;
+  losses: number;
+  draws: number;
+  winRate: number;
+  joinedAt: string;
+}
+
+export async function getLeaderboard(page = 0, size = 50): Promise<PageResponse<LeaderboardEntry>> {
+  return apiFetch(`/api/leaderboard?page=${page}&size=${size}`);
+}
+
+export async function getUserProfile(username: string): Promise<UserProfile> {
+  return apiFetch(`/api/users/${username}`);
+}
