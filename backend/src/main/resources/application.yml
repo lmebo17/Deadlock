@@ -37,3 +37,5 @@ app:
     secret-key: ${S3_SECRET_KEY:deadlock123}
     bucket: ${S3_BUCKET:deadlock-problems}
     region: ${S3_REGION:us-east-1}
+  docker:
+    host: ${DOCKER_HOST:unix:///var/run/docker.sock}

@@ -29,3 +29,5 @@ app:
     secret-key: test1234
     bucket: test-bucket
     region: us-east-1
+  docker:
+    host: unix:///var/run/docker.sock
