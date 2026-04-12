@@ -6,11 +6,14 @@ import Link from "next/link";
 import { Navbar } from "@/components/Navbar";
 import { MarkdownRenderer } from "@/components/MarkdownRenderer";
 import { DifficultyBadge } from "@/components/DifficultyBadge";
-import { getProblemBySlug, ProblemDetailResponse } from "@/lib/api";
+import { getProblemBySlug, ProblemDetailResponse, submitCode, getSubmission, SubmissionResponse } from "@/lib/api";
+import { useAuth } from "@/lib/auth";
+import { Button } from "@/components/ui/button";
 
 export default function ProblemDetailPage() {
   const params = useParams();
   const slug = params.slug as string;
+  const { isAuthenticated } = useAuth();
   const [problem, setProblem] = useState<ProblemDetailResponse | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -106,6 +109,86 @@ export default function ProblemDetailPage() {
             </div>
           ))}
         </section>
+
+        {/* Submit Section */}
+        <section className="mt-8 rounded-xl border border-border bg-card p-6">
+          <h2 className="text-xl font-semibold mb-4">Submit Solution</h2>
+          {!isAuthenticated ? (
+            <p className="text-muted-foreground">Login to submit solutions</p>
+          ) : (
+            <SubmitForm slug={slug} />
+          )}
+        </section>
+      </div>
+    </div>
+  );
+}
+
+function SubmitForm({ slug }: { slug: string }) {
+  const [language, setLanguage] = useState("PYTHON");
+  const [code, setCode] = useState("");
+  const [submitting, setSubmitting] = useState(false);
+  const [result, setResult] = useState<SubmissionResponse | null>(null);
+
+  const handleSubmit = async () => {
+    if (!code.trim()) return;
+    setSubmitting(true);
+    setResult(null);
+    try {
+      const { id } = await submitCode(slug, language, code);
+      const poll = async () => {
+        const sub = await getSubmission(id);
+        if (sub.status === "COMPLETED") {
+          setResult(sub);
+          setSubmitting(false);
+        } else {
+          setTimeout(poll, 1500);
+        }
+      };
+      poll();
+    } catch {
+      setSubmitting(false);
+    }
+  };
+
+  const verdictColor = result?.verdict === "ACCEPTED" ? "text-rank-pupil"
+    : result?.verdict ? "text-destructive" : "";
+
+  return (
+    <div className="space-y-4">
+      <div className="flex gap-3 items-center">
+        <select
+          value={language}
+          onChange={(e) => setLanguage(e.target.value)}
+          className="rounded-lg border border-border bg-secondary px-3 py-2 text-sm"
+        >
+          <option value="PYTHON">Python</option>
+          <option value="JAVA">Java</option>
+          <option value="CPP">C++</option>
+        </select>
+      </div>
+      <textarea
+        value={code}
+        onChange={(e) => setCode(e.target.value)}
+        placeholder="Write your solution here..."
+        rows={12}
+        className="w-full rounded-lg border border-border bg-background px-4 py-3 font-mono text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+      />
+      <div className="flex items-center gap-4">
+        <Button onClick={handleSubmit} disabled={submitting || !code.trim()}>
+          {submitting ? "Judging..." : "Submit"}
+        </Button>
+        {result && (
+          <div className="flex items-center gap-2">
+            <span className={`font-mono font-bold ${verdictColor}`}>{result.verdict}</span>
+            {result.failedTestCase && (
+              <span className="text-sm text-muted-foreground">on test {result.failedTestCase}</span>
+            )}
+            {result.executionTimeMs && (
+              <span className="text-sm text-muted-foreground">{result.executionTimeMs}ms</span>
+            )}
+          </div>
+        )}
       </div>
     </div>
   );

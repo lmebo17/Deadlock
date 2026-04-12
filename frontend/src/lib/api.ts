@@ -92,3 +92,25 @@ export async function getLeaderboard(page = 0, size = 50): Promise<PageResponse<
 export async function getUserProfile(username: string): Promise<UserProfile> {
   return apiFetch(`/api/users/${username}`);
 }
+
+export interface SubmissionResponse {
+  id: number;
+  problemSlug: string;
+  language: string;
+  status: string;
+  verdict: string | null;
+  failedTestCase: number | null;
+  executionTimeMs: number | null;
+  submittedAt: string;
+}
+
+export async function submitCode(slug: string, language: string, code: string): Promise<{ id: number }> {
+  return apiFetch(`/api/problems/${slug}/submit`, {
+    method: "POST",
+    body: JSON.stringify({ language, code }),
+  });
+}
+
+export async function getSubmission(id: number): Promise<SubmissionResponse> {
+  return apiFetch(`/api/submissions/${id}`);
+}
