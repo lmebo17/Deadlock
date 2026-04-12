@@ -46,6 +46,13 @@
   --radius-2xl: calc(var(--radius) * 1.8);
   --radius-3xl: calc(var(--radius) * 2.2);
   --radius-4xl: calc(var(--radius) * 2.6);
+  --color-rank-newbie: var(--rank-newbie);
+  --color-rank-pupil: var(--rank-pupil);
+  --color-rank-specialist: var(--rank-specialist);
+  --color-rank-expert: var(--rank-expert);
+  --color-rank-candidate-master: var(--rank-candidate-master);
+  --color-rank-master: var(--rank-master);
+  --color-rank-grandmaster: var(--rank-grandmaster);
 }
 
 :root {
