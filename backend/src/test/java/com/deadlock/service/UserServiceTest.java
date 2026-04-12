@@ -26,11 +26,11 @@ class UserServiceTest {
     @Mock
     private UserProviderRepository userProviderRepository;
 
-    private UserService userService;
+    private UserServiceImpl userService;
 
     @BeforeEach
     void setUp() {
-        userService = new UserService(userRepository, userProviderRepository);
+        userService = new UserServiceImpl(userRepository, userProviderRepository);
     }
 
     @Test

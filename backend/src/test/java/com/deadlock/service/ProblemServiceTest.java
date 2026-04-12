@@ -31,11 +31,11 @@ class ProblemServiceTest {
     @Mock
     private StorageService storageService;
 
-    private ProblemService problemService;
+    private ProblemServiceImpl problemService;
 
     @BeforeEach
     void setUp() {
-        problemService = new ProblemService(problemRepository, storageService);
+        problemService = new ProblemServiceImpl(problemRepository, storageService);
     }
 
     private Problem createTestProblem() {

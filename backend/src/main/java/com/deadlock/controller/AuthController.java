@@ -5,6 +5,8 @@ import com.deadlock.dto.UserResponse;
 import com.deadlock.model.User;
 import com.deadlock.security.JwtAuthFilter;
 import com.deadlock.service.UserService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
@@ -14,6 +16,7 @@ import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/api/auth")
+@Tag(name = "Auth", description = "Authentication endpoints")
 public class AuthController {
 
     private final UserService userService;
@@ -23,6 +26,7 @@ public class AuthController {
     }
 
     @GetMapping("/me")
+    @Operation(summary = "Get current user", description = "Returns the authenticated user's profile")
     public ResponseEntity<UserResponse> me(@AuthenticationPrincipal User user) {
         if (user == null) {
             return ResponseEntity.status(401).build();
@@ -31,6 +35,7 @@ public class AuthController {
     }
 
     @PostMapping("/username")
+    @Operation(summary = "Set username", description = "Set username on first login")
     public ResponseEntity<UserResponse> setUsername(@AuthenticationPrincipal User user,
                                                      @Valid @RequestBody SetUsernameRequest request) {
         User updated = userService.setUsername(user.getId(), request.username());
@@ -38,6 +43,7 @@ public class AuthController {
     }
 
     @PostMapping("/logout")
+    @Operation(summary = "Logout", description = "Invalidate all sessions and clear auth cookie")
     public ResponseEntity<Void> logout(@AuthenticationPrincipal User user,
                                         HttpServletResponse response) {
         userService.incrementTokenVersion(user.getId());
