@@ -7,7 +7,7 @@ import dynamic from "next/dynamic";
 import { Navbar } from "@/components/Navbar";
 import { MarkdownRenderer } from "@/components/MarkdownRenderer";
 import { DifficultyBadge } from "@/components/DifficultyBadge";
-import { getProblemBySlug, ProblemDetailResponse, submitCode, getSubmission, SubmissionResponse, getMySubmissions } from "@/lib/api";
+import { getProblemBySlug, ProblemDetailResponse, submitCode, getSubmission, SubmissionResponse, getMySubmissions, getStarterCode } from "@/lib/api";
 import { useAuth } from "@/lib/auth";
 import { Button } from "@/components/ui/button";
 
@@ -176,8 +176,20 @@ export default function ProblemDetailPage() {
 function SubmitForm({ slug, onJudged }: { slug: string; onJudged: () => void }) {
   const [language, setLanguage] = useState("PYTHON");
   const [code, setCode] = useState("");
+  const [previousStarter, setPreviousStarter] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [result, setResult] = useState<SubmissionResponse | null>(null);
+
+  useEffect(() => {
+      getStarterCode(slug, language)
+          .then(({ code: starter }) => {
+              if (!code || code === previousStarter) {
+                  setCode(starter);
+              }
+              setPreviousStarter(starter);
+          })
+          .catch(() => {});
+  }, [slug, language]);
 
   const handleSubmit = async () => {
     if (!code.trim()) return;

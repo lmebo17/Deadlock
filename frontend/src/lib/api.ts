@@ -118,3 +118,7 @@ export async function getSubmission(id: number): Promise<SubmissionResponse> {
 export async function getMySubmissions(slug: string): Promise<SubmissionResponse[]> {
   return apiFetch(`/api/problems/${slug}/submissions`);
 }
+
+export async function getStarterCode(slug: string, language: string): Promise<{ code: string; language: string }> {
+  return apiFetch(`/api/problems/${slug}/starter?language=${language}`);
+}
