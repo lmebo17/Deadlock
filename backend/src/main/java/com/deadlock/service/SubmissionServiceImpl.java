@@ -7,6 +7,7 @@ import com.deadlock.model.Language;
 import com.deadlock.model.Problem;
 import com.deadlock.model.Submission;
 import com.deadlock.model.User;
+import com.deadlock.repository.MatchRepository;
 import com.deadlock.repository.ProblemRepository;
 import com.deadlock.repository.SubmissionRepository;
 import com.deadlock.repository.UserRepository;
@@ -27,6 +28,7 @@ public class SubmissionServiceImpl implements SubmissionService {
     private final SubmissionRepository submissionRepository;
     private final ProblemRepository problemRepository;
     private final UserRepository userRepository;
+    private final MatchRepository matchRepository;
     private final JudgeService judgeService;
 
     @Override
@@ -49,6 +51,11 @@ public class SubmissionServiceImpl implements SubmissionService {
         submission.setProblem(problem);
         submission.setLanguage(lang);
         submission.setCode(code);
+
+        // Auto-link to active match if one exists for this problem
+        matchRepository.findActiveByUserId(userId)
+                .filter(m -> m.getProblem().getId().equals(problem.getId()))
+                .ifPresent(m -> submission.setMatchId(m.getId()));
 
         Submission saved = submissionRepository.save(submission);
         log.info("Submission {} created for problem {} by user {}", saved.getId(), problemSlug, userId);

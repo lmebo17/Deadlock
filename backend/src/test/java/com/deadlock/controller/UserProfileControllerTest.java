@@ -1,5 +1,6 @@
 package com.deadlock.controller;
 
+import com.deadlock.match.MatchService;
 import com.deadlock.model.User;
 import com.deadlock.repository.UserRepository;
 import com.deadlock.security.JwtAuthFilter;
@@ -36,6 +37,9 @@ class UserProfileControllerTest {
 
     @MockBean
     private OAuthSuccessHandler oAuthSuccessHandler;
+
+    @MockBean
+    private MatchService matchService;
 
     @Test
     void profileReturnsUserData() throws Exception {

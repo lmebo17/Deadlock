@@ -122,3 +122,36 @@ export async function getMySubmissions(slug: string): Promise<SubmissionResponse
 export async function getStarterCode(slug: string, language: string): Promise<{ code: string; language: string }> {
   return apiFetch(`/api/problems/${slug}/starter?language=${language}`);
 }
+
+export interface MatchResponse {
+  id: number;
+  player1: { id: number; username: string; avatarUrl: string; eloRating: number; tierLabel: string };
+  player2: { id: number; username: string; avatarUrl: string; eloRating: number; tierLabel: string };
+  problemSlug: string;
+  problemTitle: string;
+  winnerId: number | null;
+  status: string;
+  durationSeconds: number;
+  player1EloChange: number | null;
+  player2EloChange: number | null;
+  startedAt: string;
+  endedAt: string | null;
+}
+
+export async function getMatch(id: number): Promise<MatchResponse> {
+  return apiFetch(`/api/matches/${id}`);
+}
+
+export async function getActiveMatch(): Promise<MatchResponse | null> {
+  const res = await fetch(`${API_BASE}/api/matches/active`, {
+    credentials: "include",
+    headers: { "Content-Type": "application/json" },
+  });
+  if (res.status === 204) return null;
+  if (!res.ok) throw new Error(`API error: ${res.status}`);
+  return res.json();
+}
+
+export async function getMatchHistory(username: string): Promise<MatchResponse[]> {
+  return apiFetch(`/api/users/${username}/matches`);
+}
