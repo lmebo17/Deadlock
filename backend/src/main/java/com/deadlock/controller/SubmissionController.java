@@ -1,8 +1,11 @@
 package com.deadlock.controller;
 
+import com.deadlock.dto.RunResult;
 import com.deadlock.dto.SubmissionResponse;
 import com.deadlock.dto.SubmitCodeRequest;
+import com.deadlock.model.Language;
 import com.deadlock.model.User;
+import com.deadlock.service.RunService;
 import com.deadlock.service.SubmissionService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -22,6 +25,21 @@ import java.util.Map;
 public class SubmissionController {
 
     private final SubmissionService submissionService;
+    private final RunService runService;
+
+    @PostMapping("/api/problems/{slug}/run")
+    @Operation(summary = "Run code against sample test cases",
+               description = "Synchronous: runs code against the visible sample tests only. No persistence.")
+    public ResponseEntity<RunResult> run(
+            @PathVariable String slug,
+            @Valid @RequestBody SubmitCodeRequest request,
+            @AuthenticationPrincipal User user) {
+        if (user == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+        Language lang = Language.valueOf(request.language());
+        return ResponseEntity.ok(runService.run(slug, lang, request.code()));
+    }
 
     @PostMapping("/api/problems/{slug}/submit")
     @Operation(summary = "Submit code", description = "Submit code for judging, returns submission ID")

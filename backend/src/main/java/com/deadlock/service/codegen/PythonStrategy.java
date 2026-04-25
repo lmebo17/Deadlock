@@ -94,11 +94,12 @@ public class PythonStrategy implements LanguageWrapperStrategy {
 
     private String toPythonType(String type) {
         return switch (type) {
-            case "int" -> "int";
+            case "int", "long" -> "int"; // Python int is arbitrary precision
             case "float" -> "float";
             case "bool" -> "bool";
             case "string" -> "str";
             case "int[]" -> "list[int]";
+            case "long[]" -> "list[int]";
             case "string[]" -> "list[str]";
             case "int[][]" -> "list[list[int]]";
             case "void" -> "None";

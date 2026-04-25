@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useAuth } from "@/lib/auth";
 import { LoginButtons } from "./LoginButtons";
 import { Button } from "@/components/ui/button";
+import { WSStatus } from "./WSStatus";
 
 export function Navbar() {
   const { user, loading, isAuthenticated, logout } = useAuth();
@@ -28,6 +29,7 @@ export function Navbar() {
           {!loading && (
             isAuthenticated && user ? (
               <div className="flex items-center gap-3">
+                <WSStatus />
                 <Link href="/lobby">
                   <Button size="sm" className="gap-2">
                     Find Match

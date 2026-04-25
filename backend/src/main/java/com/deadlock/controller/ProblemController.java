@@ -6,9 +6,16 @@ import com.deadlock.dto.ProblemResponse;
 import com.deadlock.exception.ResourceNotFoundException;
 import com.deadlock.model.Language;
 import com.deadlock.model.Problem;
+import com.deadlock.model.User;
 import com.deadlock.repository.ProblemRepository;
+import com.deadlock.repository.SubmissionRepository;
 import com.deadlock.service.ProblemService;
 import com.deadlock.service.StarterCodeService;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
@@ -29,6 +36,7 @@ public class ProblemController {
 
     private final ProblemService problemService;
     private final ProblemRepository problemRepository;
+    private final SubmissionRepository submissionRepository;
     private final StarterCodeService starterCodeService;
 
     @GetMapping("/api/problems")
@@ -42,6 +50,21 @@ public class ProblemController {
         return problemService.listProblems(minRating, maxRating, search,
                 PageRequest.of(page, size, Sort.by("rating").ascending()));
     }
+
+    @GetMapping("/api/problems/me/status")
+    @Operation(summary = "Get authed user's per-problem status",
+               description = "Returns slugs the user has solved (any AC) and attempted (any submission)")
+    public ProblemUserStatus myProblemStatus(@AuthenticationPrincipal User user) {
+        if (user == null) {
+            return new ProblemUserStatus(Set.of(), Set.of());
+        }
+        Set<String> solved = new HashSet<>(submissionRepository.findSolvedSlugs(user.getId()));
+        Set<String> attempted = new HashSet<>(submissionRepository.findAttemptedSlugs(user.getId()));
+        attempted.removeAll(solved);
+        return new ProblemUserStatus(solved, attempted);
+    }
+
+    public record ProblemUserStatus(Set<String> solvedSlugs, Set<String> attemptedSlugs) {}
 
     @GetMapping("/api/problems/{slug}")
     @Operation(summary = "Get problem", description = "Full problem detail with sample test cases")

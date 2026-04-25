@@ -1,11 +1,14 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { Navbar } from "@/components/Navbar";
 import { DifficultyBadge } from "@/components/DifficultyBadge";
 import { Button } from "@/components/ui/button";
-import { getProblems, ProblemResponse, PageResponse } from "@/lib/api";
+import { useAuth } from "@/lib/auth";
+import { getProblems, getMyProblemStatus, ProblemResponse, PageResponse } from "@/lib/api";
+
+type StatusFilter = "ALL" | "SOLVED" | "UNSOLVED" | "ATTEMPTED";
 
 const TIERS = [
   { label: "All", min: 0, max: 4000 },
@@ -17,11 +20,15 @@ const TIERS = [
 ];
 
 export default function ProblemsPage() {
+  const { isAuthenticated } = useAuth();
   const [problems, setProblems] = useState<PageResponse<ProblemResponse> | null>(null);
   const [page, setPage] = useState(0);
   const [selectedTier, setSelectedTier] = useState(0);
   const [search, setSearch] = useState("");
   const [loading, setLoading] = useState(true);
+  const [solvedSet, setSolvedSet] = useState<Set<string>>(new Set());
+  const [attemptedSet, setAttemptedSet] = useState<Set<string>>(new Set());
+  const [statusFilter, setStatusFilter] = useState<StatusFilter>("ALL");
 
   useEffect(() => {
     setLoading(true);
@@ -31,6 +38,31 @@ export default function ProblemsPage() {
       .catch(() => setProblems(null))
       .finally(() => setLoading(false));
   }, [page, selectedTier, search]);
+
+  useEffect(() => {
+    if (!isAuthenticated) {
+      setSolvedSet(new Set());
+      setAttemptedSet(new Set());
+      return;
+    }
+    getMyProblemStatus()
+      .then((s) => {
+        setSolvedSet(new Set(s.solvedSlugs));
+        setAttemptedSet(new Set(s.attemptedSlugs));
+      })
+      .catch(() => {});
+  }, [isAuthenticated]);
+
+  const visible = useMemo(() => {
+    if (!problems) return [];
+    return problems.content.filter((p) => {
+      if (statusFilter === "ALL") return true;
+      if (statusFilter === "SOLVED") return solvedSet.has(p.slug);
+      if (statusFilter === "ATTEMPTED") return attemptedSet.has(p.slug);
+      if (statusFilter === "UNSOLVED") return !solvedSet.has(p.slug);
+      return true;
+    });
+  }, [problems, statusFilter, solvedSet, attemptedSet]);
 
   return (
     <div className="min-h-screen">
@@ -54,6 +86,18 @@ export default function ProblemsPage() {
               {tier.label}
             </button>
           ))}
+          {isAuthenticated && (
+            <select
+              value={statusFilter}
+              onChange={(e) => setStatusFilter(e.target.value as StatusFilter)}
+              className="rounded-lg border border-border bg-card px-3 py-2 text-sm"
+            >
+              <option value="ALL">All</option>
+              <option value="SOLVED">Solved</option>
+              <option value="UNSOLVED">Unsolved</option>
+              <option value="ATTEMPTED">Attempted</option>
+            </select>
+          )}
           <input
             type="text"
             placeholder="Search by title..."
@@ -65,7 +109,8 @@ export default function ProblemsPage() {
 
         {/* Table */}
         <div className="rounded-xl border border-border bg-card overflow-hidden">
-          <div className="grid grid-cols-[60px_1fr_160px] gap-4 border-b border-border bg-secondary/50 px-6 py-3 text-sm font-medium text-muted-foreground">
+          <div className="grid grid-cols-[40px_60px_1fr_160px] gap-4 border-b border-border bg-secondary/50 px-6 py-3 text-sm font-medium text-muted-foreground">
+            <div></div>
             <div>#</div>
             <div>Title</div>
             <div>Difficulty</div>
@@ -73,20 +118,40 @@ export default function ProblemsPage() {
 
           {loading ? (
             <div className="px-6 py-12 text-center text-muted-foreground">Loading...</div>
-          ) : problems && problems.content.length > 0 ? (
-            problems.content.map((p, i) => (
-              <Link
-                key={p.id}
-                href={`/problems/${p.slug}`}
-                className="grid grid-cols-[60px_1fr_160px] gap-4 items-center border-b border-border px-6 py-4 transition-colors hover:bg-secondary/30 last:border-0"
-              >
-                <div className="font-mono text-muted-foreground">{problems.number * problems.size + i + 1}</div>
-                <div className="font-medium">{p.title}</div>
-                <div><DifficultyBadge rating={p.rating} tierLabel={p.tierLabel} /></div>
-              </Link>
-            ))
+          ) : visible.length > 0 ? (
+            visible.map((p, i) => {
+              const solved = solvedSet.has(p.slug);
+              const attempted = attemptedSet.has(p.slug);
+              const indicator = solved ? "solved" : attempted ? "attempted" : "none";
+              const indicatorTitle = solved ? "Solved" : attempted ? "Attempted" : undefined;
+              return (
+                <Link
+                  key={p.id}
+                  href={`/problems/${p.slug}`}
+                  className="grid grid-cols-[40px_60px_1fr_160px] gap-4 items-center border-b border-border px-6 py-4 transition-colors hover:bg-secondary/30 last:border-0"
+                >
+                  <div className="flex items-center justify-center" title={indicatorTitle}>
+                    {indicator === "solved" && (
+                      <span className="inline-flex h-5 w-5 items-center justify-center rounded-full bg-rank-pupil/15 text-rank-pupil text-xs font-bold">
+                        ✓
+                      </span>
+                    )}
+                    {indicator === "attempted" && (
+                      <span className="inline-flex h-5 w-5 items-center justify-center rounded-full bg-secondary text-muted-foreground text-xs">
+                        ·
+                      </span>
+                    )}
+                  </div>
+                  <div className="font-mono text-muted-foreground">{problems!.number * problems!.size + i + 1}</div>
+                  <div className="font-medium">{p.title}</div>
+                  <div><DifficultyBadge rating={p.rating} tierLabel={p.tierLabel} /></div>
+                </Link>
+              );
+            })
           ) : (
-            <div className="px-6 py-12 text-center text-muted-foreground">No problems found</div>
+            <div className="px-6 py-12 text-center text-muted-foreground">
+              {problems && problems.content.length > 0 ? "No problems match this filter" : "No problems found"}
+            </div>
           )}
         </div>
 

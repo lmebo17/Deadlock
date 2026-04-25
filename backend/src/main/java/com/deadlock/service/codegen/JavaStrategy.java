@@ -105,6 +105,7 @@ public class JavaStrategy implements LanguageWrapperStrategy {
     private String javaParseParam(String type, String varName, String lineVar) {
         return switch (type) {
             case "int" -> toJavaType(type) + " " + varName + " = Integer.parseInt(" + lineVar + ");\n";
+            case "long" -> toJavaType(type) + " " + varName + " = Long.parseLong(" + lineVar + ");\n";
             case "float" -> toJavaType(type) + " " + varName + " = Double.parseDouble(" + lineVar + ");\n";
             case "bool" -> toJavaType(type) + " " + varName + " = Boolean.parseBoolean(" + lineVar + ");\n";
             case "string" -> toJavaType(type) + " " + varName + " = " + lineVar
@@ -112,6 +113,9 @@ public class JavaStrategy implements LanguageWrapperStrategy {
             case "int[]" -> toJavaType(type) + " " + varName + " = Arrays.stream("
                     + lineVar + ".replaceAll(\"[\\\\[\\\\]]\", \"\").split(\",\"))"
                     + ".map(String::trim).filter(s -> !s.isEmpty()).mapToInt(Integer::parseInt).toArray();\n";
+            case "long[]" -> toJavaType(type) + " " + varName + " = Arrays.stream("
+                    + lineVar + ".replaceAll(\"[\\\\[\\\\]]\", \"\").split(\",\"))"
+                    + ".map(String::trim).filter(s -> !s.isEmpty()).mapToLong(Long::parseLong).toArray();\n";
             case "string[]" -> toJavaType(type) + " " + varName + " = Arrays.stream("
                     + lineVar + ".replaceAll(\"[\\\\[\\\\]]\", \"\").split(\",\"))"
                     + ".map(s -> s.trim().replaceAll(\"\\\"\", \"\")).toArray(String[]::new);\n";
@@ -122,11 +126,12 @@ public class JavaStrategy implements LanguageWrapperStrategy {
 
     private String javaSerialize(String type, String varName) {
         return switch (type) {
-            case "int" -> "\"\" + " + varName;
+            case "int", "long" -> "\"\" + " + varName;
             case "float" -> "\"\" + " + varName;
             case "bool" -> "\"\" + " + varName;
             case "string" -> "\"\\\"\" + " + varName + " + \"\\\"\"";
             case "int[]" -> "Arrays.toString(" + varName + ").replace(\" \", \"\")";
+            case "long[]" -> "Arrays.toString(" + varName + ").replace(\" \", \"\")";
             case "string[]" -> "\"[\" + Arrays.stream(" + varName
                     + ").map(s -> \"\\\"\" + s + \"\\\"\").collect(Collectors.joining(\",\")) + \"]\"";
             case "int[][]" -> "\"[\" + Arrays.stream(" + varName
@@ -138,10 +143,12 @@ public class JavaStrategy implements LanguageWrapperStrategy {
     private String toJavaType(String type) {
         return switch (type) {
             case "int" -> "int";
+            case "long" -> "long";
             case "float" -> "double";
             case "bool" -> "boolean";
             case "string" -> "String";
             case "int[]" -> "int[]";
+            case "long[]" -> "long[]";
             case "string[]" -> "String[]";
             case "int[][]" -> "int[][]";
             case "void" -> "void";
@@ -152,10 +159,12 @@ public class JavaStrategy implements LanguageWrapperStrategy {
     private String javaDefaultReturn(String type) {
         return switch (type) {
             case "int" -> "0";
+            case "long" -> "0L";
             case "float" -> "0.0";
             case "bool" -> "false";
             case "string" -> "\"\"";
             case "int[]" -> "new int[]{}";
+            case "long[]" -> "new long[]{}";
             case "string[]" -> "new String[]{}";
             case "int[][]" -> "new int[][]{}";
             case "ListNode", "TreeNode" -> "null";

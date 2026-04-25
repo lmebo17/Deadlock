@@ -125,11 +125,11 @@ public class MatchServiceImpl implements MatchService {
         User p1 = userRepository.findById(match.getPlayer1().getId()).orElseThrow();
         User p2 = userRepository.findById(match.getPlayer2().getId()).orElseThrow();
 
+        // Only send perspective-specific MATCH_END to each user.
+        // Don't broadcast to /topic/match/{id} — would mix perspectives across players.
         eventPublisher.publishToUser(p1.getId(),
                 MatchEventPayloads.matchEnd(match, p1.getId(), p1.getEloRating()));
         eventPublisher.publishToUser(p2.getId(),
                 MatchEventPayloads.matchEnd(match, p2.getId(), p2.getEloRating()));
-        eventPublisher.publishToMatch(match.getId(),
-                MatchEventPayloads.matchEnd(match, p1.getId(), p1.getEloRating()));
     }
 }

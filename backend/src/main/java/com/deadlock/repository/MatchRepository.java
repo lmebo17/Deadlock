@@ -30,8 +30,10 @@ public interface MatchRepository extends JpaRepository<Match, Long> {
 
     /**
      * Atomic claim of winner. Returns 1 if this update set the winner, 0 if someone else already won.
+     * flushAutomatically + clearAutomatically ensure subsequent findById sees the fresh state
+     * (no stale L1 cache).
      */
-    @Modifying
+    @Modifying(flushAutomatically = true, clearAutomatically = true)
     @Query("""
         UPDATE Match m
         SET m.winner.id = :winnerId,
@@ -44,4 +46,32 @@ public interface MatchRepository extends JpaRepository<Match, Long> {
     int claimWinner(@Param("matchId") Long matchId,
                     @Param("winnerId") Long winnerId,
                     @Param("now") java.time.Instant now);
+
+    /**
+     * Aggregate match stats for a user across finished or cancelled matches.
+     */
+    interface UserMatchStats {
+        Long getWins();
+        Long getLosses();
+        Long getDraws();
+    }
+
+    @Query("""
+        SELECT
+            COALESCE(SUM(CASE WHEN m.winner.id = :userId THEN 1 ELSE 0 END), 0) AS wins,
+            COALESCE(SUM(CASE WHEN m.winner.id IS NOT NULL AND m.winner.id <> :userId THEN 1 ELSE 0 END), 0) AS losses,
+            COALESCE(SUM(CASE WHEN m.winner.id IS NULL AND m.status = com.deadlock.model.MatchStatus.FINISHED THEN 1 ELSE 0 END), 0) AS draws
+        FROM Match m
+        WHERE (m.player1.id = :userId OR m.player2.id = :userId)
+          AND m.status IN (com.deadlock.model.MatchStatus.FINISHED, com.deadlock.model.MatchStatus.CANCELLED)
+    """)
+    UserMatchStats aggregateStats(@Param("userId") Long userId);
+
+    @Query("""
+        SELECT m FROM Match m
+        WHERE (m.player1.id = :userId OR m.player2.id = :userId)
+          AND m.status IN (com.deadlock.model.MatchStatus.FINISHED, com.deadlock.model.MatchStatus.CANCELLED)
+        ORDER BY m.endedAt ASC
+    """)
+    List<Match> findFinishedByUserIdAsc(@Param("userId") Long userId);
 }

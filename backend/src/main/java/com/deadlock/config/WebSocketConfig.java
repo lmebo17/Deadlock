@@ -1,8 +1,6 @@
 package com.deadlock.config;
 
-import com.deadlock.security.JwtAuthFilter;
-import com.deadlock.security.JwtService;
-import com.deadlock.repository.UserRepository;
+import com.deadlock.model.User;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -15,21 +13,18 @@ import org.springframework.messaging.simp.stomp.StompCommand;
 import org.springframework.messaging.simp.stomp.StompHeaderAccessor;
 import org.springframework.messaging.support.ChannelInterceptor;
 import org.springframework.messaging.support.MessageHeaderAccessor;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.web.socket.config.annotation.EnableWebSocketMessageBroker;
 import org.springframework.web.socket.config.annotation.StompEndpointRegistry;
 import org.springframework.web.socket.config.annotation.WebSocketMessageBrokerConfigurer;
 
 import java.security.Principal;
-import java.util.List;
 
 @Slf4j
 @Configuration
 @EnableWebSocketMessageBroker
 @RequiredArgsConstructor
 public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
-
-    private final JwtService jwtService;
-    private final UserRepository userRepository;
 
     @Value("${app.frontend-url}")
     private String frontendUrl;
@@ -55,60 +50,30 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
                 StompHeaderAccessor accessor =
                         MessageHeaderAccessor.getAccessor(message, StompHeaderAccessor.class);
                 if (accessor != null && StompCommand.CONNECT.equals(accessor.getCommand())) {
-                    authenticate(accessor);
+                    rebindPrincipalToUserId(accessor);
                 }
                 return message;
             }
         });
     }
 
-    private void authenticate(StompHeaderAccessor accessor) {
-        // The JWT cookie is sent by the browser during the WebSocket handshake.
-        // We extract it from the native HTTP Cookie header.
-        List<String> cookieHeaders = accessor.getNativeHeader("cookie");
-        String token = extractTokenFromCookies(cookieHeaders);
-
-        // Fallback: also accept Authorization header for non-browser clients
-        if (token == null) {
-            List<String> authHeaders = accessor.getNativeHeader("Authorization");
-            if (authHeaders != null && !authHeaders.isEmpty() && authHeaders.get(0).startsWith("Bearer ")) {
-                token = authHeaders.get(0).substring(7);
-            }
+    /**
+     * The HTTP handshake already authenticated the user via JwtAuthFilter (cookie-based)
+     * and populated the WebSocket session's Principal as a UsernamePasswordAuthenticationToken
+     * with the User entity as principal. The default Principal.getName() returns the User's
+     * toString() (object hash), which breaks user-destination routing. Replace it with a
+     * stable name = userId string.
+     */
+    private void rebindPrincipalToUserId(StompHeaderAccessor accessor) {
+        Principal existing = accessor.getUser();
+        if (existing instanceof UsernamePasswordAuthenticationToken auth
+                && auth.getPrincipal() instanceof User user) {
+            accessor.setUser(new StompPrincipal(user.getId().toString()));
+            log.debug("WebSocket CONNECT: rebound principal to userId={}", user.getId());
+        } else {
+            log.warn("WebSocket CONNECT: no authenticated user (got {})",
+                    existing == null ? "null" : existing.getClass().getSimpleName());
         }
-
-        if (token == null || !jwtService.validateToken(token)) {
-            log.warn("WebSocket CONNECT rejected: missing or invalid JWT");
-            return;
-        }
-
-        try {
-            Long userId = jwtService.extractUserId(token);
-            int tokenVersion = jwtService.extractTokenVersion(token);
-            var userOpt = userRepository.findById(userId);
-            if (userOpt.isEmpty() || userOpt.get().getTokenVersion() != tokenVersion) {
-                log.warn("WebSocket CONNECT rejected: user not found or token version mismatch");
-                return;
-            }
-            // Set the principal — userId as the name so SimpMessagingTemplate.convertAndSendToUser works
-            accessor.setUser(new StompPrincipal(userId.toString()));
-            log.debug("WebSocket CONNECT authenticated user {}", userId);
-        } catch (RuntimeException e) {
-            log.warn("WebSocket CONNECT failed during JWT processing", e);
-        }
-    }
-
-    private String extractTokenFromCookies(List<String> cookieHeaders) {
-        if (cookieHeaders == null || cookieHeaders.isEmpty()) return null;
-        // cookieHeaders.get(0) looks like: "deadlock_token=xxx; other=yyy"
-        for (String header : cookieHeaders) {
-            for (String pair : header.split(";")) {
-                String trimmed = pair.trim();
-                if (trimmed.startsWith(JwtAuthFilter.COOKIE_NAME + "=")) {
-                    return trimmed.substring(JwtAuthFilter.COOKIE_NAME.length() + 1);
-                }
-            }
-        }
-        return null;
     }
 
     private record StompPrincipal(String name) implements Principal {

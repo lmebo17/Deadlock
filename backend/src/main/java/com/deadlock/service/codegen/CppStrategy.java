@@ -94,10 +94,12 @@ public class CppStrategy implements LanguageWrapperStrategy {
     private String cppParseParam(String type, String varName, String lineVar) {
         return switch (type) {
             case "int" -> "int " + varName + " = _json::parseInt(" + lineVar + ");\n";
+            case "long" -> "long long " + varName + " = _json::parseLong(" + lineVar + ");\n";
             case "float" -> "double " + varName + " = _json::parseFloat(" + lineVar + ");\n";
             case "bool" -> "bool " + varName + " = _json::parseBool(" + lineVar + ");\n";
             case "string" -> "string " + varName + " = _json::parseString(" + lineVar + ");\n";
             case "int[]" -> "vector<int> " + varName + " = _json::parseIntArray(" + lineVar + ");\n";
+            case "long[]" -> "vector<long long> " + varName + " = _json::parseLongArray(" + lineVar + ");\n";
             case "string[]" -> "vector<string> " + varName + " = _json::parseStringArray(" + lineVar + ");\n";
             case "int[][]" -> "vector<vector<int>> " + varName + " = _json::parseInt2DArray(" + lineVar + ");\n";
             case "ListNode" -> "ListNode* " + varName + " = _json::parseListNode(" + lineVar + ");\n";
@@ -109,10 +111,12 @@ public class CppStrategy implements LanguageWrapperStrategy {
     private String cppSerialize(String type, String varName) {
         return switch (type) {
             case "int" -> "_json::serializeInt(" + varName + ")";
+            case "long" -> "_json::serializeLong(" + varName + ")";
             case "float" -> "_json::serializeFloat(" + varName + ")";
             case "bool" -> "_json::serializeBool(" + varName + ")";
             case "string" -> "_json::serializeString(" + varName + ")";
             case "int[]" -> "_json::serializeIntArray(" + varName + ")";
+            case "long[]" -> "_json::serializeLongArray(" + varName + ")";
             case "string[]" -> "_json::serializeStringArray(" + varName + ")";
             case "int[][]" -> "_json::serializeInt2DArray(" + varName + ")";
             case "ListNode" -> "_json::serializeListNode(" + varName + ")";
@@ -124,10 +128,12 @@ public class CppStrategy implements LanguageWrapperStrategy {
     private String toCppType(String type) {
         return switch (type) {
             case "int" -> "int";
+            case "long" -> "long long";
             case "float" -> "double";
             case "bool" -> "bool";
             case "string" -> "string";
             case "int[]" -> "vector<int>";
+            case "long[]" -> "vector<long long>";
             case "string[]" -> "vector<string>";
             case "int[][]" -> "vector<vector<int>>";
             case "void" -> "void";
@@ -139,7 +145,7 @@ public class CppStrategy implements LanguageWrapperStrategy {
 
     private boolean isCppRefType(String type) {
         return switch (type) {
-            case "int[]", "string[]", "int[][]", "string" -> true;
+            case "int[]", "long[]", "string[]", "int[][]", "string" -> true;
             default -> false;
         };
     }
@@ -147,10 +153,11 @@ public class CppStrategy implements LanguageWrapperStrategy {
     private String cppDefaultReturn(String type) {
         return switch (type) {
             case "int" -> "0";
+            case "long" -> "0LL";
             case "float" -> "0.0";
             case "bool" -> "false";
             case "string" -> "\"\"";
-            case "int[]", "string[]", "int[][]" -> "{}";
+            case "int[]", "long[]", "string[]", "int[][]" -> "{}";
             case "ListNode", "TreeNode" -> "nullptr";
             case "void" -> "";
             default -> "{}";

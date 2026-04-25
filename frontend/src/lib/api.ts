@@ -61,6 +61,15 @@ export async function getProblemBySlug(slug: string): Promise<ProblemDetailRespo
   return apiFetch(`/api/problems/${slug}`);
 }
 
+export interface ProblemUserStatus {
+  solvedSlugs: string[];
+  attemptedSlugs: string[];
+}
+
+export async function getMyProblemStatus(): Promise<ProblemUserStatus> {
+  return apiFetch(`/api/problems/me/status`);
+}
+
 export interface LeaderboardEntry {
   rank: number;
   id: number;
@@ -95,17 +104,49 @@ export async function getUserProfile(username: string): Promise<UserProfile> {
 
 export interface SubmissionResponse {
   id: number;
+  userId: number | null;
+  username: string | null;
   problemSlug: string;
   language: string;
   status: string;
   verdict: string | null;
   failedTestCase: number | null;
   executionTimeMs: number | null;
+  code: string;
   submittedAt: string;
+}
+
+export async function getMatchSubmissions(matchId: number): Promise<SubmissionResponse[]> {
+  return apiFetch(`/api/matches/${matchId}/submissions`);
 }
 
 export async function submitCode(slug: string, language: string, code: string): Promise<{ id: number }> {
   return apiFetch(`/api/problems/${slug}/submit`, {
+    method: "POST",
+    body: JSON.stringify({ language, code }),
+  });
+}
+
+export interface RunTestResult {
+  index: number;
+  input: string;
+  expected: string;
+  actual: string;
+  stderr: string;
+  passed: boolean;
+  timedOut: boolean;
+  runtimeError: boolean;
+}
+
+export interface RunResult {
+  compileError: boolean;
+  compileErrorMessage: string | null;
+  tests: RunTestResult[];
+  totalExecutionTimeMs: number;
+}
+
+export async function runCode(slug: string, language: string, code: string): Promise<RunResult> {
+  return apiFetch(`/api/problems/${slug}/run`, {
     method: "POST",
     body: JSON.stringify({ language, code }),
   });
@@ -154,4 +195,23 @@ export async function getActiveMatch(): Promise<MatchResponse | null> {
 
 export async function getMatchHistory(username: string): Promise<MatchResponse[]> {
   return apiFetch(`/api/users/${username}/matches`);
+}
+
+export interface EloHistoryPoint {
+  at: string;
+  elo: number;
+  matchId: number;
+}
+
+export async function getEloHistory(username: string): Promise<EloHistoryPoint[]> {
+  return apiFetch(`/api/users/${username}/elo-history`);
+}
+
+export interface ContributionDay {
+  date: string;
+  count: number;
+}
+
+export async function getContributions(username: string): Promise<ContributionDay[]> {
+  return apiFetch(`/api/users/${username}/contributions`);
 }

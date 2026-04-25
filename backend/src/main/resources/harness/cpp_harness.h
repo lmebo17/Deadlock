@@ -32,6 +32,7 @@ namespace _json {
     }
 
     int parseInt(const string& s) { return stoi(trim(s)); }
+    long long parseLong(const string& s) { return stoll(trim(s)); }
     double parseFloat(const string& s) { return stod(trim(s)); }
     bool parseBool(const string& s) { return trim(s) == "true"; }
 
@@ -67,6 +68,13 @@ namespace _json {
         auto parts = splitArray(s);
         vector<int> r;
         for (auto& p : parts) if (!p.empty()) r.push_back(stoi(p));
+        return r;
+    }
+
+    vector<long long> parseLongArray(const string& s) {
+        auto parts = splitArray(s);
+        vector<long long> r;
+        for (auto& p : parts) if (!p.empty()) r.push_back(stoll(p));
         return r;
     }
 
@@ -120,11 +128,21 @@ namespace _json {
     }
 
     string serializeInt(int v) { return to_string(v); }
+    string serializeLong(long long v) { return to_string(v); }
     string serializeFloat(double v) { ostringstream os; os << v; return os.str(); }
     string serializeBool(bool v) { return v ? "true" : "false"; }
     string serializeString(const string& v) { return "\"" + v + "\""; }
 
     string serializeIntArray(const vector<int>& v) {
+        string r = "[";
+        for (size_t i = 0; i < v.size(); i++) {
+            if (i) r += ",";
+            r += to_string(v[i]);
+        }
+        return r + "]";
+    }
+
+    string serializeLongArray(const vector<long long>& v) {
         string r = "[";
         for (size_t i = 0; i < v.size(); i++) {
             if (i) r += ",";

@@ -7,6 +7,7 @@ import { useAuth } from "@/lib/auth";
 import { Button } from "@/components/ui/button";
 import { getMatchWebSocket, MatchEvent } from "@/lib/match-ws";
 import { getActiveMatch } from "@/lib/api";
+import { toast } from "sonner";
 
 function getRankColor(eloRating: number): string {
   if (eloRating < 1200) return "text-rank-newbie";
@@ -33,6 +34,7 @@ export default function LobbyPage() {
   const [difficulty, setDifficulty] = useState("ANY");
   const [searching, setSearching] = useState(false);
   const [waitTime, setWaitTime] = useState(0);
+  const [matchFound, setMatchFound] = useState<MatchEvent | null>(null);
   const waitTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   useEffect(() => {
@@ -56,7 +58,12 @@ export default function LobbyPage() {
       if (event.type === "MATCH_FOUND" && event.matchId) {
         if (waitTimerRef.current) clearInterval(waitTimerRef.current);
         setSearching(false);
-        router.push(`/match/${event.matchId}`);
+        setMatchFound(event);
+        toast.success(`Match found vs ${event.opponentUsername}!`);
+        // Show anticipation screen for 2.5 seconds, then navigate
+        setTimeout(() => {
+          router.push(`/match/${event.matchId}`);
+        }, 2500);
       }
     });
 
@@ -153,18 +160,92 @@ export default function LobbyPage() {
               </Button>
             </>
           ) : (
-            <div className="space-y-6">
-              <div className="text-2xl font-mono font-bold text-primary">{formatTime(waitTime)}</div>
-              <div className="text-muted-foreground">
-                Searching within ±{eloRange} ELO ({timeControl}, {difficulty})
+            <div className="rounded-2xl border border-border bg-card p-10 space-y-6">
+              <div>
+                <div className="text-xs font-medium text-muted-foreground uppercase tracking-widest mb-2">
+                  Searching for opponent
+                </div>
+                <div className="text-6xl font-mono font-bold text-primary tabular-nums">
+                  {formatTime(waitTime)}
+                </div>
               </div>
-              <div className="mx-auto h-2 w-48 rounded-full bg-primary/20 overflow-hidden">
-                <div className="h-full w-1/3 rounded-full bg-primary animate-pulse" />
+
+              {/* Animated radar dots */}
+              <div className="flex items-center justify-center gap-1 h-3">
+                <span className="h-2 w-2 rounded-full bg-primary animate-pulse" style={{ animationDelay: "0ms" }} />
+                <span className="h-2 w-2 rounded-full bg-primary animate-pulse" style={{ animationDelay: "200ms" }} />
+                <span className="h-2 w-2 rounded-full bg-primary animate-pulse" style={{ animationDelay: "400ms" }} />
               </div>
-              <Button variant="outline" onClick={handleCancel}>Cancel</Button>
+
+              <div className="space-y-2 text-sm">
+                <div className="flex items-center justify-between text-muted-foreground">
+                  <span>Mode</span>
+                  <span className="font-medium text-foreground">
+                    {TIME_CONTROLS.find((t) => t.value === timeControl)?.label} ·{" "}
+                    {difficulty.charAt(0) + difficulty.slice(1).toLowerCase()}
+                  </span>
+                </div>
+                <div className="flex items-center justify-between text-muted-foreground">
+                  <span>ELO range</span>
+                  <span className="font-mono text-foreground">
+                    ±{eloRange}
+                    {waitTime >= 30 && <span className="ml-1 text-xs text-rank-pupil">(expanded)</span>}
+                  </span>
+                </div>
+              </div>
+
+              <Button
+                variant="outline"
+                size="lg"
+                onClick={handleCancel}
+                className="w-full"
+              >
+                Cancel search
+              </Button>
             </div>
           )}
         </div>
+
+        {matchFound && user && (
+          <div className="fixed inset-0 z-50 bg-background/95 backdrop-blur-sm flex items-center justify-center animate-in fade-in duration-300">
+            <div className="text-center space-y-8 animate-in zoom-in-95 duration-500">
+              <div className="text-sm font-medium text-muted-foreground uppercase tracking-widest">
+                Match Found
+              </div>
+              <div className="flex items-center gap-12">
+                {/* You */}
+                <div className="text-center">
+                  {user.avatarUrl && (
+                    <img src={user.avatarUrl} alt="" className="h-24 w-24 rounded-full mx-auto mb-3 ring-4 ring-primary" />
+                  )}
+                  <div className="font-bold text-lg">{user.username}</div>
+                  <div className={`text-sm font-mono ${getRankColor(user.eloRating)}`}>
+                    {user.eloRating}
+                  </div>
+                </div>
+
+                <div className="text-5xl font-bold text-primary animate-pulse">VS</div>
+
+                {/* Opponent */}
+                <div className="text-center">
+                  {matchFound.opponentAvatarUrl && (
+                    <img src={matchFound.opponentAvatarUrl} alt="" className="h-24 w-24 rounded-full mx-auto mb-3 ring-4 ring-destructive" />
+                  )}
+                  <div className="font-bold text-lg">{matchFound.opponentUsername}</div>
+                  <div className={`text-sm font-mono ${getRankColor(matchFound.opponentElo ?? 1200)}`}>
+                    {matchFound.opponentElo}
+                  </div>
+                </div>
+              </div>
+              <div className="text-muted-foreground text-sm">
+                {matchFound.problemTitle}
+              </div>
+              <div className="text-xs text-muted-foreground animate-pulse">
+                Entering arena...
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
